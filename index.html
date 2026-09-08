@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>정시반 출석부</title>
+<title>3학년 일과 중 자기주도 학습반 출석부</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -272,7 +272,7 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
     <div class="hdr">
       <div class="idblock">
         <div class="emblem has" id="emblem" role="img" aria-label="풍산고등학교 교표"></div>
-        <div class="brand">정시반 출석부<small>풍산고등학교 3학년 · 지혜의 숲 · 모둠학습실</small></div>
+        <div class="brand">일과 중 자기주도 학습반 출석부<small>풍산고등학교 3학년 · 지혜의 숲 · 모둠학습실</small></div>
       </div>
       <div class="views" role="tablist" aria-label="화면 전환">
         <button role="tab" data-view="check" aria-selected="true">출석</button>
@@ -396,7 +396,7 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
 
 <div class="modal" id="pin" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
-    <h3 id="pinTitle">정시반 출석부</h3>
+    <h3 id="pinTitle">3학년 일과 중 자기주도 학습반 출석부</h3>
     <p class="sub" id="pinMsg" style="margin-bottom:16px">핀 번호를 넣어주세요. 이 기기에서는 한 번만 물어봅니다.</p>
     <input type="password" id="pinInput" inputmode="numeric" autocomplete="off"
            placeholder="핀 번호" aria-label="핀 번호"
@@ -1099,7 +1099,7 @@ function exportSummary(){
     var c = per[s.sid] || {B:0,L:0,E:0};
     lines.push([s.sid,s.name,s.room,c.B,c.L,c.E,c.B+c.L+c.E].map(csvCell).join(","));
   });
-  download("정시반_출석누계_"+S.logMonth+".csv", lines.join("\n"));
+  download("3학년일과중자기주도학습반_출석누계_"+S.logMonth+".csv", lines.join("\n"));
 }
 
 function exportDetail(){
@@ -1118,7 +1118,7 @@ function exportDetail(){
     });
   });
   if(lines.length === 1){ toast("내보낼 기록이 없습니다"); return; }
-  download("정시반_출석상세_"+S.logMonth+".csv", lines.join("\n"));
+  download("3학년일과중자기주도학습반_출석상세_"+S.logMonth+".csv", lines.join("\n"));
 }
 
 /* ---------------- 확인 창 ---------------- */
