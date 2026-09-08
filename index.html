@@ -355,11 +355,10 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
     </div>
 
     <div class="panel" id="acctPanel" hidden>
-      <h3>공유 계정</h3>
+      <h3>공유 상태</h3>
       <p class="sub" id="acctWho">—</p>
       <div class="toolbar" style="margin:0">
         <button class="mini" id="syncNow">지금 동기화</button>
-        <button class="mini danger" id="signOut">로그아웃</button>
       </div>
     </div>
 
@@ -406,19 +405,6 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
       <span class="spacer"></span>
       <button class="mini" id="mCancel">취소</button>
       <button class="btn btn-dark" id="mSave">저장</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="login" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
-    <h3 id="lgTitle">교사 로그인</h3>
-    <p class="sub" id="lgMsg" style="margin-bottom:16px">공유 출석부입니다. 학교에서 발급받은 계정으로 들어가세요.</p>
-    <input type="email" id="lgEmail" placeholder="이메일" autocomplete="username" aria-label="이메일" style="width:100%;margin-bottom:8px">
-    <input type="password" id="lgPw" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호" style="width:100%">
-    <div class="toolbar" style="margin:20px 0 0">
-      <span class="spacer"></span>
-      <button class="btn btn-dark" id="lgGo">들어가기</button>
     </div>
   </div>
 </div>
@@ -473,8 +459,8 @@ var SEED = [
    apiKey를 비워두면 예전처럼 이 기기에만 저장됩니다.
    ========================================================= */
 var FB = {
-  projectId: "poongsann",
-  apiKey: "",                 // Firebase 콘솔 → 프로젝트 설정 → 웹 API 키
+  projectId: "poongsan3-b49c8",
+  apiKey: "AIzaSyCXHWNaauQc9TJFNiiOKUyc6UBfnUxUxFU",
   collection: "jeongsiban"
 };
 var SHARED = !!FB.apiKey;
@@ -546,26 +532,26 @@ function authClear(){
   AUTH = {idToken:"", refreshToken:"", exp:0, email:""};
   try{ window.localStorage.removeItem("jsb.auth"); }catch(e){}
 }
-function signIn(email, pw){
-  return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FB.apiKey, {
+function signInAnon(){
+  return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + FB.apiKey, {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({email:email, password:pw, returnSecureToken:true})
+    body: JSON.stringify({returnSecureToken:true})
   }).then(function(r){ return r.json(); }).then(function(j){
-    if(j.error) throw new Error(j.error.message || "로그인 실패");
-    AUTH = {idToken:j.idToken, refreshToken:j.refreshToken, exp:Date.now() + (+j.expiresIn - 60)*1000, email:j.email};
+    if(j.error || !j.idToken) throw new Error(j.error && j.error.message || "연결 실패");
+    AUTH = {idToken:j.idToken, refreshToken:j.refreshToken, exp:Date.now() + (+j.expiresIn - 60)*1000, email:""};
     authSave();
-    return true;
+    return AUTH.idToken;
   });
 }
 function ensureToken(){
   if(!SHARED) return Promise.reject(new Error("공유 꺼짐"));
   if(AUTH.idToken && Date.now() < AUTH.exp) return Promise.resolve(AUTH.idToken);
-  if(!AUTH.refreshToken) return Promise.reject(new Error("로그인 필요"));
+  if(!AUTH.refreshToken) return signInAnon();
   return fetch("https://securetoken.googleapis.com/v1/token?key=" + FB.apiKey, {
     method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"},
     body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(AUTH.refreshToken)
   }).then(function(r){ return r.json(); }).then(function(j){
-    if(j.error || !j.id_token) throw new Error("로그인 필요");
+    if(j.error || !j.id_token){ authClear(); return signInAnon(); }
     AUTH.idToken = j.id_token;
     AUTH.refreshToken = j.refresh_token || AUTH.refreshToken;
     AUTH.exp = Date.now() + (+j.expires_in - 60)*1000;
@@ -647,9 +633,8 @@ function syncPush(){
       setSync("공유됨");
       renderCheck();
     });
-  }).catch(function(e){
-    setSync(/로그인/.test(e.message) ? "로그인 필요" : "오프라인 — 연결되면 올라갑니다");
-    if(/로그인/.test(e.message)) showLogin();
+  }).catch(function(){
+    setSync("오프라인 — 연결되면 올라갑니다");
   }).then(function(){ syncBusy = false; });
 }
 
@@ -663,20 +648,6 @@ function syncPull(){
     renderCheck();
     setSync("공유됨");
   }).catch(function(){});
-  fsGet("roster").then(function(r){
-    if(!r || !r.length) return;
-    if(JSON.stringify(r) === JSON.stringify(S.roster)) return;
-    S.roster = r;
-    sset("roster.v1", r);
-    renderCheck();
-    if(!document.getElementById("view-roster").hidden) renderRoster();
-  }).catch(function(){});
-}
-
-function showLogin(){
-  if(!SHARED) return;
-  document.getElementById("login").hidden = false;
-  setTimeout(function(){ document.getElementById("lgEmail").focus(); }, 40);
 }
 
 /* ---------------- 상태 ---------------- */
@@ -780,8 +751,8 @@ function loadMonthFor(dateStr){
         sset(key, S.month);
       }
       setSync("공유됨");
-    }).catch(function(e){
-      setSync(/로그인/.test(e.message) ? "로그인 필요" : "오프라인 — 저장된 기록만 보입니다");
+    }).catch(function(){
+      setSync("오프라인 — 저장된 기록만 보입니다");
     });
   });
 }
@@ -1038,10 +1009,9 @@ function renderRoster(){
   }
 }
 
+/* 명단은 공유하지 않는다 — 파일에 들어 있고, 기기별로만 저장된다 */
 function saveRoster(){
-  var p = sset("roster.v1", S.roster);
-  if(SHARED) p = p.then(function(){ return fsPut("roster", S.roster).catch(function(){ toast("명단을 아직 공유하지 못했습니다"); }); });
-  return p;
+  return sset("roster.v1", S.roster);
 }
 
 /* ---------------- CSV ---------------- */
@@ -1397,40 +1367,13 @@ document.getElementById("pasteGo").onclick = function(){
   });
 };
 
-/* ---------------- 로그인 · 계정 ---------------- */
-document.getElementById("lgGo").onclick = function(){
-  var em = document.getElementById("lgEmail").value.trim();
-  var pw = document.getElementById("lgPw").value;
-  if(!em || !pw){ document.getElementById("lgMsg").textContent = "이메일과 비밀번호를 모두 넣어주세요."; return; }
-  document.getElementById("lgMsg").textContent = "확인 중…";
-  signIn(em, pw).then(function(){
-    document.getElementById("lgPw").value = "";
-    document.getElementById("login").hidden = true;
-    document.getElementById("lgMsg").textContent = "공유 출석부입니다. 학교에서 발급받은 계정으로 들어가세요.";
-    paintAcct();
-    S.monthKey = "";
-    loadMonthFor(S.date).then(function(){ renderCheck(); syncPush(); });
-  }).catch(function(e){
-    var m = String(e.message || "");
-    document.getElementById("lgMsg").textContent =
-      /PASSWORD|EMAIL|INVALID/.test(m) ? "이메일이나 비밀번호가 맞지 않습니다." : "로그인하지 못했습니다. 인터넷 연결을 확인해 주세요.";
-  });
-};
-document.getElementById("lgPw").addEventListener("keydown", function(e){
-  if(e.key === "Enter") document.getElementById("lgGo").click();
-});
+/* ---------------- 공유 상태 ---------------- */
 function paintAcct(){
   var panel = document.getElementById("acctPanel");
   panel.hidden = !SHARED;
   if(SHARED) document.getElementById("acctWho").textContent =
-    (AUTH.email || "로그인 안 됨") + " · 이 출석부는 선생님들이 함께 씁니다.";
+    "출결 기록만 공유됩니다. 명단은 이 기기에만 저장되니, 명단을 고치면 다른 선생님께도 새 파일을 전해주세요.";
 }
-document.getElementById("signOut").onclick = function(){
-  ask("로그아웃할까요? 아직 올라가지 않은 변경분이 있으면 먼저 동기화됩니다.").then(function(yes){
-    if(!yes) return;
-    syncPush().then(function(){ authClear(); paintAcct(); showLogin(); });
-  });
-};
 document.getElementById("syncNow").onclick = function(){
   if(!SHARED){ toast("공유 설정이 아직 안 되어 있습니다"); return; }
   syncPush().then(syncPull);
@@ -1438,8 +1381,7 @@ document.getElementById("syncNow").onclick = function(){
 
 /* ---------------- 시작 ---------------- */
 authLoad(); pendLoad(); paintAcct();
-if(SHARED && !AUTH.refreshToken) showLogin();
-if(SHARED) setInterval(function(){ if(!document.getElementById("login").hidden) return; syncPull(); }, 20000);
+if(SHARED) setInterval(syncPull, 20000);
 if(SHARED) window.addEventListener("online", function(){ syncPush(); });
 
 Promise.all([ sget("roster.v1"), loadMonthFor(S.date), sget("emblem.v1") ]).then(function(res){
@@ -1449,7 +1391,7 @@ Promise.all([ sget("roster.v1"), loadMonthFor(S.date), sget("emblem.v1") ]).then
   if(!r || !r.length) saveRoster();
   if(MODE === "memory") setSync("임시 저장 — 새로고침하면 사라집니다");
   renderCheck();
-  if(SHARED && AUTH.refreshToken) syncPush();
+  if(SHARED) syncPush();
 });
 
 })();
