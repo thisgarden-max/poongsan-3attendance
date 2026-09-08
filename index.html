@@ -125,7 +125,9 @@ header{
 .btn:hover{background:#F3F5F0}
 .btn-dark{background:var(--ink);color:#EFF1EC;border-color:var(--ink)}
 .btn-dark:hover{background:#26362D}
-.saved{font-size:12px;color:var(--ink-faint)}
+.saved{font-size:12px;color:var(--ink-faint);cursor:pointer;text-decoration:underline;
+  text-decoration-style:dotted;text-underline-offset:3px}
+.saved:hover{color:var(--ink-soft)}
 
 .hint{margin-top:var(--s3);font-size:13px;color:var(--ink-soft)}
 
@@ -301,7 +303,7 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
     <div class="summary">
       <div class="tally" id="tally"></div>
       <div class="acts">
-        <span class="saved" id="saved"></span>
+        <button class="saved" id="saved" title="눌러서 연결 상태 확인"></button>
         <button class="btn" id="resetPeriod">이 교시 전원 출석</button>
       </div>
     </div>
@@ -1344,6 +1346,22 @@ document.getElementById("pasteGo").onclick = function(){
       document.getElementById("pasteBox").value = "";
       renderRoster(); renderCheck(); toast(room+" "+added.length+"명 반영됨");
     });
+  });
+};
+
+/* ---------------- 연결 상태 확인 ---------------- */
+document.getElementById("saved").onclick = function(){
+  if(!SHARED){ toast("공유 설정이 되어 있지 않습니다"); return; }
+  LAST_ERR = "";
+  setSync("확인 중…");
+  syncPush().then(rosterPush).then(rosterPull).then(function(){
+    if(LAST_ERR){
+      var wait = PENDING.length + ROPS.length;
+      toast("연결 안 됨 — " + LAST_ERR + (wait ? " (대기 " + wait + "건)" : ""));
+    }else{
+      setSync("공유됨");
+      toast("연결됨 — 명단과 출결이 서버에 올라갔습니다");
+    }
   });
 };
 
