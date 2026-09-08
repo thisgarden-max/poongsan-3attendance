@@ -348,7 +348,6 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
       <div class="toolbar">
         <h2 style="margin:0">명단 관리</h2>
         <span class="spacer"></span>
-        <button class="btn" id="restore">원본 명단으로</button>
       </div>
       <p class="sub">학습실 안에서 반별로 묶어 보여줍니다. 학번을 고치면 반도 따라 바뀝니다. 학번과 이름 칸을 고치면 바로 저장됩니다. 각 학습실 맨 아래 칸에 학번과 이름을 넣고 <b>추가</b>를 누르면 학생이 들어갑니다. <b>이동</b>은 다른 학습실로 옮깁니다.</p>
       <div id="rosterEdit"></div>
@@ -384,7 +383,7 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
     <div class="panel">
       <h3>명단 붙여넣기</h3>
       <p class="sub">한 줄에 <b>학번 이름</b> 형식으로 넣으세요. 탭·쉼표·공백 모두 됩니다. 넣는 학습실을 고른 뒤 불러오면 그 학습실 명단이 교체됩니다.</p>
-      <textarea id="pasteBox" placeholder="3104 김동우&#10;3106 김서진&#10;3107 김예원"></textarea>
+      <textarea id="pasteBox" placeholder="3101 홍길동&#10;3102 김철수&#10;3103 이영희"></textarea>
       <div class="toolbar" style="margin:12px 0 0">
         <select id="pasteRoom" class="mini" style="padding:7px 10px"></select>
         <button class="btn btn-dark" id="pasteGo">불러오기</button>
@@ -428,44 +427,8 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
 "use strict";
 
 /* ---------------- 기본 명단 ---------------- */
-var SEED = [
-["지혜의 숲","3104","김동우"],["지혜의 숲","3106","김서진"],["지혜의 숲","3107","김예원"],
-["지혜의 숲","3131","한정미"],["지혜의 숲","3203","김건우"],["지혜의 숲","3208","김태우"],
-["지혜의 숲","3212","박윤진"],["지혜의 숲","3213","반서영"],["지혜의 숲","3214","백승효"],
-["지혜의 숲","3215","서아민"],["지혜의 숲","3217","신세호"],["지혜의 숲","3220","오유진"],
-["지혜의 숲","3221","유지원"],["지혜의 숲","3226","장현서"],["지혜의 숲","3228","최은찬"],
-["지혜의 숲","3230","최호준"],["지혜의 숲","3302","강지원"],["지혜의 숲","3303","권희재"],
-["지혜의 숲","3304","김건우"],["지혜의 숲","3306","김남형"],["지혜의 숲","3310","김진원"],
-["지혜의 숲","3312","박호태"],["지혜의 숲","3316","소형경"],["지혜의 숲","3320","염지윤"],
-["지혜의 숲","3321","유지민"],["지혜의 숲","3329","최유담"],["지혜의 숲","3401","김관주"],
-["지혜의 숲","3404","김지유"],["지혜의 숲","3408","류기욱"],["지혜의 숲","3413","손민정"],
-["지혜의 숲","3418","오가은"],["지혜의 숲","3421","장건우"],["지혜의 숲","3423","전용성"],
-["지혜의 숲","3426","조연우"],["지혜의 숲","3504","김다인"],["지혜의 숲","3505","김민호"],
-["지혜의 숲","3508","김지후"],["지혜의 숲","3509","남선주"],["지혜의 숲","3511","박준서"],
-["지혜의 숲","3512","박준희"],["지혜의 숲","3513","박줄리하"],["지혜의 숲","3527","조윤아"],
-["지혜의 숲","3529","한윤종"],["지혜의 숲","3607","김은솔"],["지혜의 숲","3609","박민호"],
-["모둠학습실","3612","박지훈"],["모둠학습실","3614","안준형"],["모둠학습실","3615","양지혁"],
-["모둠학습실","3701","강시연"],["모둠학습실","3705","김서연"],["모둠학습실","3708","문준규"],
-["모둠학습실","3711","성지훈"],["모둠학습실","3712","송민섭"],["모둠학습실","3713","신우성"],
-["모둠학습실","3714","신재우"],["모둠학습실","3717","유정우"],["모둠학습실","3718","윤태경"],
-["모둠학습실","3719","윤형준"],["모둠학습실","3723","임시후"],["모둠학습실","3725","정광표"],
-["모둠학습실","3726","조승훈"],["모둠학습실","3728","황채원"],["모둠학습실","3729","황현지"],
-["모둠학습실","3803","김규림"],["모둠학습실","3805","김시안"],["모둠학습실","3815","이동호"],
-["모둠학습실","3821","장민혁"],["모둠학습실","3822","전민욱"]
-].map(function(r){return {room:r[0],sid:r[1],name:r[2]};});
-
-/* =========================================================
-   공유 설정 — 여기 두 줄만 채우면 여러 선생님이 같은 기록을 봅니다.
-   apiKey를 비워두면 예전처럼 이 기기에만 저장됩니다.
-   ========================================================= */
-var FB = {
-  projectId: "poongsan3-b49c8",
-  apiKey: "AIzaSyCXHWNaauQc9TJFNiiOKUyc6UBfnUxUxFU",
-  collection: "jeongsiban"
-};
-var SHARED = !!FB.apiKey;
-
-var DEFAULT_EMBLEM = "data:image/png;base64,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";
+/* 명단은 Firestore에서 받아온다. 파일에는 학생 정보가 들어 있지 않다. */
+var SEED = [];
 
 var ROOMS = ["지혜의 숲","모둠학습실"];
 var LABEL = {A:"출석",B:"결석",L:"지각",E:"조퇴"};
@@ -616,6 +579,21 @@ function applyOps(base, ops){
 }
 
 var syncBusy = false;
+var LAST_ERR = "";
+function readErr(e){
+  var m = String((e && e.message) || e || "");
+  if(/CONFIGURATION_NOT_FOUND|OPERATION_NOT_ALLOWED|ADMIN_ONLY/.test(m))
+    return "Authentication에서 '익명' 로그인이 아직 켜져 있지 않습니다.";
+  if(/읽기 실패 404|쓰기 실패 404/.test(m))
+    return "Firestore 데이터베이스가 아직 만들어지지 않았습니다.";
+  if(/읽기 실패 403|쓰기 실패 403|PERMISSION/.test(m))
+    return "Firestore 규칙이 막고 있습니다. 규칙을 게시했는지 확인하세요.";
+  if(/API key|API_KEY|400/.test(m))
+    return "API 키나 프로젝트 ID가 맞지 않습니다.";
+  if(/Failed to fetch|NetworkError|Load failed/.test(m))
+    return "네트워크가 막혀 있습니다. 이 화면이 Claude 미리보기면 정상이며, 실제 주소에서 열어보세요.";
+  return m || "알 수 없는 오류";
+}
 function setSync(txt){ var el = document.getElementById("saved"); if(el) el.textContent = txt; }
 
 function syncPush(){
@@ -633,7 +611,8 @@ function syncPush(){
       setSync("공유됨");
       renderCheck();
     });
-  }).catch(function(){
+  }).catch(function(e){
+    LAST_ERR = readErr(e);
     setSync("오프라인 — 연결되면 올라갑니다");
   }).then(function(){ syncBusy = false; });
 }
@@ -648,6 +627,40 @@ function syncPull(){
     renderCheck();
     setSync("공유됨");
   }).catch(function(){});
+}
+
+/* ---------------- 명단 변경분 큐 ---------------- */
+var ROPS = [];
+function ropsLoad(){ try{ ROPS = JSON.parse(window.localStorage.getItem("jsb.rops") || "[]"); }catch(e){ ROPS = []; } }
+function ropsSave(){ try{ window.localStorage.setItem("jsb.rops", JSON.stringify(ROPS)); }catch(e){} }
+function ropsPush(op){ if(!SHARED) return; ROPS.push(op); ropsSave(); }
+
+function sortRoster(list){
+  return list.sort(function(a,b){
+    var ra = ROOMS.indexOf(a.room), rb = ROOMS.indexOf(b.room);
+    if(ra !== rb) return ra - rb;
+    return String(a.sid).localeCompare(String(b.sid));
+  });
+}
+function applyRops(base, ops){
+  ops.forEach(function(o){
+    if(o.t === "set"){
+      if(o.was && o.was !== o.sid) base = base.filter(function(x){ return x.sid !== o.was; });
+      var hit = false;
+      base = base.map(function(x){
+        if(x.sid !== o.sid) return x;
+        hit = true; return {room:o.room, sid:o.sid, name:o.name};
+      });
+      if(!hit) base.push({room:o.room, sid:o.sid, name:o.name});
+    }else if(o.t === "del"){
+      base = base.filter(function(x){ return x.sid !== o.sid; });
+    }else if(o.t === "room"){
+      base = base.filter(function(x){ return x.room !== o.room; }).concat(o.list);
+    }else if(o.t === "all"){
+      base = o.list.slice();
+    }
+  });
+  return sortRoster(base);
 }
 
 /* ---------------- 상태 ---------------- */
@@ -733,7 +746,7 @@ function queueSave(){
   saveTimer = setTimeout(function(){
     sset(S.monthKey, S.month).then(function(ok){
       el.textContent = ok ? (SHARED ? "동기화 중" : "저장됨") : "저장 실패 — 화면을 닫지 마세요";
-      if(SHARED) syncPush();
+      if(SHARED) syncPush().then(rosterPush).then(rosterPull).then(renderCheck);
     });
   }, 700);
 }
@@ -751,7 +764,8 @@ function loadMonthFor(dateStr){
         sset(key, S.month);
       }
       setSync("공유됨");
-    }).catch(function(){
+    }).catch(function(e){
+      LAST_ERR = readErr(e);
       setSync("오프라인 — 저장된 기록만 보입니다");
     });
   });
@@ -838,7 +852,7 @@ function renderGrid(){
   if(!list.length){
     host.innerHTML = '<div class="empty">'+
       (S.ban === "all"
-        ? '이 학습실에 배정된 학생이 없습니다. 명단 화면에서 학생을 옮겨주세요.'
+        ? '아직 명단이 없습니다. <b>명단</b> 탭에서 한 번만 넣으면 다른 선생님 화면에도 함께 올라갑니다.'
         : S.ban + '반 학생이 이 학습실에는 없습니다.') + '</div>';
   }else if(S.ban === "all"){
     var out = "", cur = null;
@@ -1009,9 +1023,42 @@ function renderRoster(){
   }
 }
 
-/* 명단은 공유하지 않는다 — 파일에 들어 있고, 기기별로만 저장된다 */
 function saveRoster(){
-  return sset("roster.v1", S.roster);
+  sortRoster(S.roster);
+  var p = sset("roster.v1", S.roster);
+  if(SHARED) p = p.then(rosterPush);
+  return p;
+}
+
+var rosterBusy = false;
+function rosterPush(){
+  if(!SHARED || rosterBusy || !ROPS.length) return Promise.resolve();
+  rosterBusy = true;
+  var mine = ROPS.slice();
+  return fsGet("roster").then(function(remote){
+    var merged = applyRops(remote || [], mine);
+    return fsPut("roster", merged).then(function(){
+      ROPS = ROPS.slice(mine.length);
+      ropsSave();
+      S.roster = merged;
+      sset("roster.v1", merged);
+      toast("명단이 공유되었습니다");
+    });
+  }).catch(function(e){
+    LAST_ERR = readErr(e);
+    toast("명단을 아직 올리지 못했습니다 — 연결되면 반영됩니다");
+  }).then(function(){ rosterBusy = false; });
+}
+function rosterPull(){
+  if(!SHARED || rosterBusy || ROPS.length) return Promise.resolve();
+  return fsGet("roster").then(function(r){
+    if(!r) return;
+    if(JSON.stringify(r) === JSON.stringify(S.roster)) return;
+    S.roster = sortRoster(r);
+    sset("roster.v1", S.roster);
+    renderCheck();
+    if(!document.getElementById("view-roster").hidden) renderRoster();
+  }).catch(function(){});
 }
 
 /* ---------------- CSV ---------------- */
@@ -1338,13 +1385,6 @@ document.getElementById("rosterEdit").addEventListener("change", function(e){
   S.roster[i][inp.dataset.f] = v;
   saveRoster().then(function(){ renderCheck(); toast("저장됨"); });
 });
-document.getElementById("restore").onclick = function(){
-  ask("첨부해주신 원본 명단(68명)으로 되돌릴까요? 출석 기록은 지워지지 않습니다.").then(function(yes){
-    if(!yes) return;
-    S.roster = SEED.map(function(s){ return {room:s.room, sid:s.sid, name:s.name}; });
-    saveRoster().then(function(){ renderRoster(); renderCheck(); toast("원본 명단으로 되돌렸습니다"); });
-  });
-};
 document.getElementById("pasteGo").onclick = function(){
   var room = document.getElementById("pasteRoom").value;
   var raw = document.getElementById("pasteBox").value.trim();
@@ -1372,23 +1412,31 @@ function paintAcct(){
   var panel = document.getElementById("acctPanel");
   panel.hidden = !SHARED;
   if(SHARED) document.getElementById("acctWho").textContent =
-    "출결 기록만 공유됩니다. 명단은 이 기기에만 저장되니, 명단을 고치면 다른 선생님께도 새 파일을 전해주세요.";
+    "명단과 출결 기록이 선생님들 사이에 공유됩니다. 연결 상태를 보려면 아래 '지금 동기화'를 눌러보세요.";
 }
 document.getElementById("syncNow").onclick = function(){
   if(!SHARED){ toast("공유 설정이 아직 안 되어 있습니다"); return; }
-  syncPush().then(syncPull);
+  LAST_ERR = "";
+  var el = document.getElementById("acctWho");
+  el.textContent = "확인 중…";
+  syncPush().then(rosterPush).then(rosterPull).then(function(){
+    var wait = PENDING.length + ROPS.length;
+    el.textContent = LAST_ERR
+      ? ("연결 안 됨 — " + LAST_ERR + (wait ? " (대기 중인 변경 " + wait + "건)" : ""))
+      : "연결됨 — 명단과 출결 기록이 함께 공유되고 있습니다.";
+  });
 };
 
 /* ---------------- 시작 ---------------- */
 authLoad(); pendLoad(); paintAcct();
-if(SHARED) setInterval(syncPull, 20000);
-if(SHARED) window.addEventListener("online", function(){ syncPush(); });
+ropsLoad();
+if(SHARED) setInterval(function(){ syncPull(); rosterPull(); }, 20000);
+if(SHARED) window.addEventListener("online", function(){ syncPush().then(rosterPush); });
 
 Promise.all([ sget("roster.v1"), loadMonthFor(S.date), sget("emblem.v1") ]).then(function(res){
   var r = res[0];
   paintEmblem(res[2] || DEFAULT_EMBLEM);
-  S.roster = (r && r.length) ? r : SEED.map(function(s){ return {room:s.room, sid:s.sid, name:s.name}; });
-  if(!r || !r.length) saveRoster();
+  S.roster = sortRoster((r && r.length) ? r : []);
   if(MODE === "memory") setSync("임시 저장 — 새로고침하면 사라집니다");
   renderCheck();
   if(SHARED) syncPush();
