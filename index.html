@@ -175,6 +175,7 @@ header{
 /* ---------- 사유 입력 ---------- */
 .modal{position:fixed;inset:0;background:rgba(20,32,26,.42);display:grid;place-items:end center;z-index:60;padding:var(--s4)}
 .modal[hidden]{display:none}
+body.locked header,body.locked main{visibility:hidden}
 @media (min-width:600px){.modal{place-items:center}}
 .sheet{
   background:var(--card);border-radius:14px;padding:var(--s5);width:100%;max-width:420px;
@@ -361,6 +362,17 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
     </div>
 
     <div class="panel">
+      <h3>핀 번호</h3>
+      <p class="sub">앱에 들어올 때 물어보는 번호입니다. 바꾸면 모든 선생님 기기에서 다시 물어봅니다.</p>
+      <div class="toolbar" style="margin:0">
+        <input type="text" id="pinNew" inputmode="numeric" maxlength="12" aria-label="새 핀 번호"
+               style="border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:16px;
+                      letter-spacing:.15em;width:150px;background:#FBFCFA">
+        <button class="btn btn-dark" id="pinSave">바꾸기</button>
+      </div>
+    </div>
+
+    <div class="panel">
       <h3>명단 붙여넣기</h3>
       <p class="sub">한 줄에 <b>학번 이름</b> 형식으로 넣으세요. 탭·쉼표·공백 모두 됩니다. 넣는 학습실을 고른 뒤 불러오면 그 학습실 명단이 교체됩니다.</p>
       <textarea id="pasteBox" placeholder="3101 홍길동&#10;3102 김철수&#10;3103 이영희"></textarea>
@@ -384,6 +396,20 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
       <span class="spacer"></span>
       <button class="mini" id="mCancel">취소</button>
       <button class="btn btn-dark" id="mSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="pin" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+    <h3 id="pinTitle">정시반 출석부</h3>
+    <p class="sub" id="pinMsg" style="margin-bottom:16px">핀 번호를 넣어주세요. 이 기기에서는 한 번만 물어봅니다.</p>
+    <input type="password" id="pinInput" inputmode="numeric" autocomplete="off"
+           placeholder="핀 번호" aria-label="핀 번호"
+           style="width:100%;text-align:center;letter-spacing:.4em;font-size:20px">
+    <div class="toolbar" style="margin:20px 0 0">
+      <span class="spacer"></span>
+      <button class="btn btn-dark" id="pinGo">들어가기</button>
     </div>
   </div>
 </div>
@@ -416,6 +442,9 @@ var FB = {
   collection: "jeongsiban"
 };
 var SHARED = !!FB.apiKey;
+
+/* 처음 쓰는 핀 번호. 앱의 명단 탭에서 바꿀 수 있고, 바꾸면 모든 기기에 반영됩니다. */
+var PIN_DEFAULT = "202633";
 
 /* 풍산고등학교 교표 (파일에 내장) */
 var DEFAULT_EMBLEM = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAMAAAC8EZcfAAAA/1BMVEUAAAApDXH29/YBk0KBxCYjBnTz8XL4yADkexQqD24CjzoqDm98wSJpVpqh0l2onHFoVHFKMoWxp8nplBB1vRSYi7j46glLM3JVAFV1uTIIjkOt2Z0BpVOFdqwBfjwAAP+Cwyb4swYEj0OpqwGCxCjuegxVAKqHd3H3xwbN56r0xgvDu9VJsXbDunJ+xp+R0CjkfBx/3hYA/wCEvi+qqlV/wSixYwB/fwy13sf/AADkexgAaV4frDm7qhTsihZgsDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABIlayyAAAAQHRSTlMA/f/+/g3//P1i/qL+/////////P7/DP8DBk7/CP8DAYwKiwRFEQP/n/9a/////x1bHQFEA1UDAv8BrAkE96hgnIRaAwAADpZJREFUeNrNneliosgWgIGEdBtFlghoJ7RxOmoSb0+Wmd5v97z/W93a69QKCPad+hE3hI+zn0IqQXD0WO/iNXkSx5PJdDoN4ZhOJ5M4DtjncfDbBzsoRgs9A2OSk/m9jDERXexng5T0ZH4X4zLuQ8cGYYyXp6dbU7rwiEEZTyvGeOeTXY3/5HmLrpenQ8Qa8ggviQr0N4oQYRklLsb4ZFIk0jOE15TyaXTggBEBzA9RZJJOTyTF2MTLOY8hQcKVR1FRWgipFMf2XBMvIccuoga8oQBGUcnfhIIWUhw17llsryD6S4heOSAZCaVkaAVGq4GgBeJ4poh2NNFVy3iSkGKwN4qiwO/lmKeRn7DnTaFEnbH0jCKfot2EmxVSIQKRRsZVTACxJxdIykWZh9xpNHscSYhLTXzowExfRZRgoUWFAUieFcgEEyTQgnySC3NUhbgcrl6Lc9Aj4QOW/IUJWBJyjEnMtURvNhZ/joeqd2KJxyVByamchP1rgPJliI0zigxHoUJcxyN5R3IoiAQwV8RCHjl4xENIiU0saXCEbqibl5HgZd8xg+IAX1HUyyMI4aJUVIkHZ1prImoAB3IK0EWaokiGqxl9EUY9JAnuvdGhxAZlWr05chZ0lI2J5Up5Hkmomh/YPTH2hugu71RnJQ33FrAHWE9MjiHU3COiQeMgsltZ9qsGgYsQ78qh+I8g1N23iUQiK+3W3kWMAjZRAfsTAr6GOm9SFE2OPRNZUxkOGAmzSrWynfYjlHxJpNR05LwTd8lMRpuua+Ax+VGEQH7oXJNSnDpSb+nqLmFejWN3P0rYCnrSBTj7HoRQv3xHPBIWrqaSdb/LZczaeVfrV9Lw3hB1RIWM853tEPpHwcoQlruMmMzgEJVamODXSwZpipDmxzxixW1PT1H8l/QZJGUV9gYI9yqxu42hW0xDox6iSVLKoDuhkj/wWTY4HjeRYXwd29zY1kjnIa/BlADZJacg1Qj/bejZJhS01Eu5zuUm2c7SMtA9llA3cWttEwdTGZpLUgvgh4NaKk2CnjXIzkRUi4ykoytLPkJYsFCgesfkmJ7MaPqJN+fCkroRLsVpMis5kBwSFfkILaPeuiLVMDUnoJid+HYuDRBHKFJpRmYJ7DjHqtput1XVvT3MuWbKSPaufjMUCmalQVHodbq1E/tWbTYb8Qo9d2Ki2AiFmIt00i0r7+T5IdcoeAHjr88rzlbRIV44hahGxZwfQ9QgE+JStu+ulQoal0TNQYnQZoezJXTV4/39Gz7u7x8ryug4iuLOJD3ltD8sWpS8VM6tZJEPuK8RRiuEt3mUbHIQSBciTAUl9cMI9F5ITzu/BytRxs2Hj1/Z6Bgj+njzpZUwEXKEmtpZXVhql/RciUpo8HnxOGLVnk7VMEOPFXtqBOoZh1Cbq4jV+ITEt/HjEcRNsN1atRWr1kTDTF27lSw8hPSXLLzkuYsPGd/jmy7jkWzrJeR5vgQZy/STHfcQqlY9RBt8HcQnhNhG2CTq7CIR4dJhFbzZyhWr1ewPHZMf/0oOtxA37XaI+VBTVnO56BYvBBhyd4e920TnexRwb+VwMroI1YmBgtljbhMhOJ2EEeYwLtn4FDjBeH9/350QVk6F1t+rItyBbUlBjjtg4SE2PhseHt+3JLF0JASJK+cHtzmyag8sB5d2A2R8bx3j6uoXiSsao5UQHLYhgHkBLB8eVpvnyEsY2CcaX+XjI4hbQqNG8UdbyFb676bBwa2xVzWiDylLfcZKNUBU8OnqlW4s3nhGRUSlRcrKTjhVr2EkSmhzJJFCzTpKyKyCe4UPPf/+/Iwq1efn728lIiJE5xIEUIjBpvIVUHVTlolWGsdaGYMvGhSRnrdVvkeN7xnY1ubX2ytB+FlPN/ctSqaCLOTshdCdsFXZIDjSNlUw4PuFjrndft5+/rwhleH2FyfcYsJqAwntSo6N4jXSgzU/i4RLDkyGqoXPBisY8KFjbr7Jyv8zYnymAr56u91+YSKXIvzgF2FOOyHk0o2iPR6O5JSiLLMMD1b4jDSLSpctVfPVd/pZBezQ4ckgmxxyZb45WKvRSFifY8LpgyJAzGeKRBI+E8JvG0AYbH0iBAJSdKxsgQJRksjqkVhgtaKjWm0UPmz1f5Ox+vKqEFIlB1/e39zcrP5bSRH+WN0o4z3p9MThS7UcYPKBKbFQk4g+23T/BvC9UT56WknCZy5CNh6lFXqLBnr9qgROio+/VmezUJwpEhgqX4OXp6cXNJ5e/lKKq9u7u7/YeHr6Gwn6RRB+vyIh6OYdGz+vfpLv/PznnTpugleYJrgT5zDdiRPIkyS0JJFVcHvOxwyOc2Xc3gXcIrcVUvLPxeXlWev4I3ivzVcp2Y6okH+cRMYEaswBrUhgkE9uP3BCdNDFWafBAGNwCcCY+18HMM0pHxMvhxJsGXfBE+V7d3bWA1AgwIsqpUSImQs1ymyscJHOgEiMn9DWffgYoJrvkgZcupVTnw2dHsmNRri7BAnh3zc9+ASgrAtZHCkaOVM6kdP5hdbJBf1UjMZTVd2c9QWUfpxTuESZyp0KEzwoNsiKCSvgbLFYzMiD5jq3QfBHf0Dhx8bPV6boU349PdKqwYkbcDZ/uJ4j3z4nD6oIf5gYl2R4ASdGFcAdFXb4pBgTaSR2Ay6u0Xbz2WyOHh4WqiebFniJt74+u/QBynkhDVCfxsmTMlcrbhWQBkQKuCCA1wsQJGfnt6aGL7/i8/YBwmSS64Cun9vxtk/JJOeRazzM6AazM7sEI6+TyLa3yPUpcRcgLxQ6AkaDAGMPxnRkwMtxAadOwNgJOJ+fP5CHOXGS8/P5CIDxqIBzCDifX58QMAxCJ2AwVMWXFkA1JgovPgIwGAJ4eYbfCi4NwMuzr1+/ypgoAYP+gOvBgNcWwP8oMVEArjsB5rllSsZig4vFnD6ck0C9mDsA/+wOCBsj9QcrgTIJWwDApQvwmjrJNfWOB/pqoASXWueWmICJ+qMOD2BnFf95FKB2fTrQOs7/P2CkSkoHzP2AD9GDNROjXDwbBzB3ATa6BA0nmXWp+oc7SaT2noHlJ5aOMEO91T3ms+MB16qzgivwAZw8LHNfoCZV4IkAYaDOyyI5KtWdFPCYXBwbNjj3jvPjAX3FQo9qBhf7DsjzBan6xwec9ipYEcGDXb3Xs0Fe7CtYJ70AFy7AxYkAJ72aJgZ4rar3wQXYPRfvfIpscWML4PlCGdduCdJBANlzV6D2+GqLGw9Q8TXD+Aoq6sAG6KVwxpnJYEDnMAEnnsJ+6jTCuLsXz2fDAN0QgRvejIPU5mgBDZ4zm5wdDejW8MQPqE5gzubXeNAC+oG8oOUDe9/IJF0BYz9g7DdCkIsf/LkYAPL20jG8U8C6Ft39lD6J3gtw2CQ69BG3gcrLEFzFnYuFXoAeDU/hhRyHH5tO4hiwWOgJOPVZmYc/jPtOoh+nYh9ArFywtZ3AyQE9Kgy1y7HmWP4OwGXojyM+HaMtqmB19+nOMz59+nT36ZbUswrgH+/ax03w6pMPKwc8Xh52/kH8050qQXTsrjeHhGHLBJbvHLCQv3xYffCP1Qpf57yTgO++BcHN+/c3beNH68Fbih37r0lt4/XDS7DCMsSAN8H7zgL0HVv+cGbaehZdtIwJF5eY77/H3h1n/1GWb6sOd3gAwn+wBN/14Ft7BAhl49msz+1kOCTB2YIOApyGYdvUQdt2PZT8Uj3Nzm5ef4yhYEUyXjfpc/PqKlhcBi9H3X7rP+zOJ8KwB+DrP8FrDw8JfQLcdT6X7mb4EqyCcQxQ19vSu3FnM3zFWn4dwQCNX3r7RRjGo6/N0fuIfivUfyo/xvINXj7zbgNXyKz3JyFs4bOlB4cIs4uPJyAUfHW67+yW9rRdX1xcjG6Hwv7w3tOuJcrO9KoszS4uxicUfHTvqSVq7NpvugrDlOGlIxNCviy1EDpuujL8ZH9BCIkiXLetHYEnblvLyG4x4b5jUNOVTAnprmrXjX/9lw+ZQj5KmHVQsJF8arwPRJhSW6ndt072wJPhmfHtM0y4D+usS2KFSv6IbQMFmYwYofCUQSsBgZtPGV+KpYdCTSb276+Q5c1/KfePj8RT0iwb9/ZdoN8a2FDL7btAyeib6Z5AXmRSfOIG6HX/G6DX5oIBaUYtEMivtXLiCUW42J4QWuYVdz2Va4ZZql9oPx0qO2GGVOjpRVbjaGWf+hx0Ez6OEpywT4vG/YwFP/RXFWA9bBmDDAY9ot895Ou20MKE7SolgNiXM7l/5DVDFoKgVh0qrti3MJaEF2mqJiLm2/WRS2lkzOSUHX7sX7gDQjVTkrRUa07dcTESXnaoeSMFu5/0WS5FBpuLWjUZ8hCCyE8h25ZzqWnI+hgqOsnA854LzliqV540UyoIWx3nXBAHyy+rSXZSzjk7js9OmDLlYE3toe20j5pR4a+m1nObDlj0SIswNRND1gUsk84bSuFfDJlfaW1bsXNn0hfJy9rGRhy2VqRPfGJvinCMhbdE+stI+hPHrmnogeVEuOfv7WtggzXdAeQewmdprYWTpNohMkaUSW/SpXrBkFNavaWjTAtoaw+KpFlbLVAaP8DPtKSBfKsOVUcesgahujCHwNpb/TAT7xKDq5lYVVdOM7bBHlyyHlKiw4U5xG73ug0pUYhWKVRayDCBqGUaT1NgfsO6HKjmPZehYV+ZolgiKsyWpo7GfAz1ygoWCHFvsz6mW6hOxkZk6J3WG2M+JVZ8xYKYEdWDGoLVPPvMFh9V8Y0zV6GuBJTqhPQN6SPIwvY1i9OehDMZcUFgVYggw+PGmTfNH6HnZMQM92ZMHl98lpYx1Io8pYRVQ445rzGsdfXr2YYYCl3KvAYcxirBUyz3HLD1vKeuqkUNykxwmc0Gp6dbdjyO3YghWM5G5jVD96dcclxIscuC9zgOmjHw1Iu2W9rcPuN3LHtPc8u/+h8HSDH+e//1AmOkayD8O/95hWh++RP87z/0BnSkf//xP0a5fLBGn+icAAAAAElFTkSuQmCC";
@@ -1232,7 +1261,7 @@ document.querySelectorAll('.views button').forEach(function(b){
     document.getElementById("view-roster").hidden = v!=="roster";
     document.getElementById("datebar").style.display = v==="check" ? "" : "none";
     if(v==="log") renderLog();
-    if(v==="roster") renderRoster();
+    if(v==="roster"){ renderRoster(); document.getElementById("pinNew").placeholder = "현재 " + SETTINGS.pin; }
   };
 });
 
@@ -1343,8 +1372,91 @@ document.getElementById("syncNow").onclick = function(){
   });
 };
 
+/* ---------------- 핀 잠금 ---------------- */
+var SETTINGS = {pin: PIN_DEFAULT};
+var settingsReady = false;
+
+function settingsLoad(){
+  try{
+    var c = JSON.parse(window.localStorage.getItem("jsb.settings") || "null");
+    if(c && c.pin) SETTINGS = c;
+  }catch(e){}
+}
+function settingsCache(){
+  try{ window.localStorage.setItem("jsb.settings", JSON.stringify(SETTINGS)); }catch(e){}
+}
+function settingsPull(){
+  if(!SHARED){ settingsReady = true; return Promise.resolve(); }
+  return fsGet("settings").then(function(r){
+    if(r && r.pin){ SETTINGS = r; settingsCache(); }
+    settingsReady = true;
+  }).catch(function(){ settingsReady = true; });
+}
+function pinSaved(){
+  try{ return window.localStorage.getItem("jsb.pin") === SETTINGS.pin; }catch(e){ return false; }
+}
+function unlock(){
+  document.body.classList.remove("locked");
+  document.getElementById("pin").hidden = true;
+}
+function lock(){
+  document.body.classList.add("locked");
+  document.getElementById("pin").hidden = false;
+  setTimeout(function(){ document.getElementById("pinInput").focus(); }, 40);
+}
+function tryPin(v){
+  if(v !== SETTINGS.pin) return false;
+  try{ window.localStorage.setItem("jsb.pin", SETTINGS.pin); }catch(e){}
+  document.getElementById("pinInput").value = "";
+  unlock();
+  return true;
+}
+document.getElementById("pinGo").onclick = function(){
+  var v = document.getElementById("pinInput").value.trim();
+  if(tryPin(v)) return;
+  if(!settingsReady){
+    document.getElementById("pinMsg").textContent = "확인 중…";
+    settingsPull().then(function(){
+      if(!tryPin(v)){
+        document.getElementById("pinMsg").textContent = "핀 번호가 맞지 않습니다. 다시 넣어주세요.";
+        document.getElementById("pinInput").value = "";
+        document.getElementById("pinInput").focus();
+      }
+    });
+    return;
+  }
+  document.getElementById("pinMsg").textContent = "핀 번호가 맞지 않습니다. 다시 넣어주세요.";
+  document.getElementById("pinInput").value = "";
+  document.getElementById("pinInput").focus();
+};
+
+document.getElementById("pinSave").onclick = function(){
+  var v = document.getElementById("pinNew").value.trim();
+  if(!/^[0-9]{4,12}$/.test(v)){ toast("숫자 4~12자리로 넣어주세요"); return; }
+  ask("핀 번호를 " + v + " 로 바꿀까요? 다른 선생님 기기에서도 다시 물어봅니다.").then(function(yes){
+    if(!yes) return;
+    SETTINGS.pin = v;
+    settingsCache();
+    try{ window.localStorage.setItem("jsb.pin", v); }catch(e){}
+    document.getElementById("pinNew").value = "";
+    if(SHARED){
+      fsPut("settings", SETTINGS)
+        .then(function(){ toast("핀 번호를 바꿨습니다"); })
+        .catch(function(){ toast("이 기기에만 적용됐습니다 — 연결되면 다시 눌러주세요"); });
+    }else{
+      toast("핀 번호를 바꿨습니다");
+    }
+  });
+};
+document.getElementById("pinInput").addEventListener("keydown", function(e){
+  if(e.key === "Enter"){ e.preventDefault(); document.getElementById("pinGo").click(); }
+});
+
 /* ---------------- 시작 ---------------- */
+settingsLoad();
+if(SETTINGS.pin && !pinSaved()) lock(); else unlock();
 authLoad(); pendLoad(); paintAcct();
+settingsPull();
 ropsLoad();
 if(SHARED) setInterval(function(){ syncPull(); rosterPull(); }, 20000);
 if(SHARED) window.addEventListener("online", function(){ syncPush().then(rosterPush); });
