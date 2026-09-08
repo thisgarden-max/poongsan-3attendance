@@ -353,14 +353,6 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
       <div id="rosterEdit"></div>
     </div>
 
-    <div class="panel" id="acctPanel" hidden>
-      <h3>공유 상태</h3>
-      <p class="sub" id="acctWho">—</p>
-      <div class="toolbar" style="margin:0">
-        <button class="mini" id="syncNow">지금 동기화</button>
-      </div>
-    </div>
-
     <div class="panel">
       <h3>핀 번호</h3>
       <p class="sub">앱에 들어올 때 물어보는 번호입니다. 바꾸면 모든 선생님 기기에서 다시 물어봅니다.</p>
@@ -506,6 +498,9 @@ function sset(key,val){
 }
 
 /* ---------------- 로그인 ---------------- */
+function req(url, opt){
+  return Promise.resolve().then(function(){ return fetch(url, opt); });
+}
 var AUTH = {idToken:"", refreshToken:"", exp:0, email:""};
 function authLoad(){
   try{ var r = JSON.parse(window.localStorage.getItem("jsb.auth") || "null"); if(r) AUTH = r; }catch(e){}
@@ -518,7 +513,7 @@ function authClear(){
   try{ window.localStorage.removeItem("jsb.auth"); }catch(e){}
 }
 function signInAnon(){
-  return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + FB.apiKey, {
+  return req("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + FB.apiKey, {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({returnSecureToken:true})
   }).then(function(r){ return r.json(); }).then(function(j){
@@ -532,7 +527,7 @@ function ensureToken(){
   if(!SHARED) return Promise.reject(new Error("공유 꺼짐"));
   if(AUTH.idToken && Date.now() < AUTH.exp) return Promise.resolve(AUTH.idToken);
   if(!AUTH.refreshToken) return signInAnon();
-  return fetch("https://securetoken.googleapis.com/v1/token?key=" + FB.apiKey, {
+  return req("https://securetoken.googleapis.com/v1/token?key=" + FB.apiKey, {
     method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"},
     body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(AUTH.refreshToken)
   }).then(function(r){ return r.json(); }).then(function(j){
@@ -552,7 +547,7 @@ function docUrl(id){
 }
 function fsGet(id){
   return ensureToken().then(function(t){
-    return fetch(docUrl(id), {headers:{Authorization:"Bearer " + t}});
+    return req(docUrl(id), {headers:{Authorization:"Bearer " + t}});
   }).then(function(r){
     if(r.status === 404) return null;
     if(!r.ok) throw new Error("읽기 실패 " + r.status);
@@ -564,7 +559,7 @@ function fsGet(id){
 }
 function fsPut(id, obj){
   return ensureToken().then(function(t){
-    return fetch(docUrl(id) + "?updateMask.fieldPaths=data&updateMask.fieldPaths=updatedAt", {
+    return req(docUrl(id) + "?updateMask.fieldPaths=data&updateMask.fieldPaths=updatedAt", {
       method:"PATCH",
       headers:{Authorization:"Bearer " + t, "Content-Type":"application/json"},
       body: JSON.stringify({fields:{
@@ -1352,26 +1347,6 @@ document.getElementById("pasteGo").onclick = function(){
   });
 };
 
-/* ---------------- 공유 상태 ---------------- */
-function paintAcct(){
-  var panel = document.getElementById("acctPanel");
-  panel.hidden = !SHARED;
-  if(SHARED) document.getElementById("acctWho").textContent =
-    "명단과 출결 기록이 선생님들 사이에 공유됩니다. 연결 상태를 보려면 아래 '지금 동기화'를 눌러보세요.";
-}
-document.getElementById("syncNow").onclick = function(){
-  if(!SHARED){ toast("공유 설정이 아직 안 되어 있습니다"); return; }
-  LAST_ERR = "";
-  var el = document.getElementById("acctWho");
-  el.textContent = "확인 중…";
-  syncPush().then(rosterPush).then(rosterPull).then(function(){
-    var wait = PENDING.length + ROPS.length;
-    el.textContent = LAST_ERR
-      ? ("연결 안 됨 — " + LAST_ERR + (wait ? " (대기 중인 변경 " + wait + "건)" : ""))
-      : "연결됨 — 명단과 출결 기록이 함께 공유되고 있습니다.";
-  });
-};
-
 /* ---------------- 핀 잠금 ---------------- */
 var SETTINGS = {pin: PIN_DEFAULT};
 var settingsReady = false;
@@ -1429,7 +1404,9 @@ document.getElementById("pinGo").onclick = function(){
   document.getElementById("pinInput").value = "";
   document.getElementById("pinInput").focus();
 };
-
+document.getElementById("pinInput").addEventListener("keydown", function(e){
+  if(e.key === "Enter"){ e.preventDefault(); document.getElementById("pinGo").click(); }
+});
 document.getElementById("pinSave").onclick = function(){
   var v = document.getElementById("pinNew").value.trim();
   if(!/^[0-9]{4,12}$/.test(v)){ toast("숫자 4~12자리로 넣어주세요"); return; }
@@ -1448,14 +1425,11 @@ document.getElementById("pinSave").onclick = function(){
     }
   });
 };
-document.getElementById("pinInput").addEventListener("keydown", function(e){
-  if(e.key === "Enter"){ e.preventDefault(); document.getElementById("pinGo").click(); }
-});
 
 /* ---------------- 시작 ---------------- */
 settingsLoad();
 if(SETTINGS.pin && !pinSaved()) lock(); else unlock();
-authLoad(); pendLoad(); paintAcct();
+authLoad(); pendLoad();
 settingsPull();
 ropsLoad();
 if(SHARED) setInterval(function(){ syncPull(); rosterPull(); }, 20000);
