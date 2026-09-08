@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>정시반 출석부</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9EBE5;
+  --card:#FFFFFF;
+  --ink:#1A2620;
+  --ink-soft:#5A6660;
+  --ink-faint:#8B948E;
+  --line:#CBD1C8;
+  --line-soft:#E0E4DC;
+  --forest:#2F6B4F;
+  --indigo:#3B4E8C;
+  --absent:#B3261E;
+  --late:#B57608;
+  --early:#4A6FA5;
+  --focus:#1A2620;
+
+  --b1:#2F6B4F; --b2:#3B4E8C; --b3:#8C5A2B; --b4:#6B4C8C;
+  --b5:#1F6E77; --b6:#8C2F52; --b7:#4A6B22; --b8:#7A5C1E; --b0:#6B7570;
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+  --r:10px;
+  --sans:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --serif:'Gowun Batang','Nanum Myeongjo',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:var(--s7);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 var(--s4)}
+
+/* ---------- header ---------- */
+header{
+  background:var(--ink);
+  color:#EFF1EC;
+  padding:var(--s5) 0 var(--s4);
+}
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);flex-wrap:wrap}
+.idblock{display:flex;align-items:center;gap:var(--s3)}
+.emblem{
+  width:52px;height:52px;border-radius:50%;flex:0 0 auto;overflow:hidden;
+  border:1px dashed rgba(255,255,255,.35);display:grid;place-items:center;
+  font-size:11px;color:#9BA79F;background:rgba(255,255,255,.05);transition:border-color .15s
+}
+.emblem:hover{border-color:rgba(255,255,255,.6)}
+.emblem img{width:100%;height:100%;object-fit:contain;display:block}
+.emblem.has{border-style:solid;border-color:rgba(255,255,255,.22);background:#fff}
+.views{overflow-x:auto;max-width:100%}
+.brand{font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font-family:var(--sans);font-size:12px;font-weight:400;letter-spacing:.06em;color:#9BA79F;margin-top:6px}
+.views{display:flex;gap:2px;background:rgba(255,255,255,.09);padding:3px;border-radius:999px}
+.views button{padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;color:#B7C0BA;transition:color .15s}
+.views button[aria-selected=true]{background:var(--paper);color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- date bar ---------- */
+.datebar{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s5);flex-wrap:wrap}
+.step{width:38px;height:38px;border:1px solid rgba(255,255,255,.22);border-radius:50%;color:#EFF1EC;font-size:17px;display:grid;place-items:center;transition:background .15s}
+.step:hover{background:rgba(255,255,255,.12)}
+.dateline{font-family:var(--serif);font-size:24px;font-weight:700}
+.dateline .dow{color:#9BA79F;font-family:var(--sans);font-size:14px;font-weight:500;margin-left:6px}
+.pill{font-size:12px;font-weight:600;color:var(--ink);background:#D8DED3;padding:4px 10px;border-radius:999px}
+.datebar input[type=date]{background:transparent;border:1px solid rgba(255,255,255,.22);color:#EFF1EC;border-radius:8px;padding:6px 8px;font-size:13px}
+.ghost{margin-left:auto;font-size:13px;font-weight:600;color:#B7C0BA;border-bottom:1px solid rgba(255,255,255,.3);padding-bottom:2px}
+.ghost:hover{color:#EFF1EC}
+
+/* ---------- rooms + periods ---------- */
+.rooms{display:flex;gap:var(--s2);margin-top:var(--s5);overflow-x:auto;padding-bottom:var(--s1)}
+.room{
+  flex:0 0 auto;padding:var(--s3) var(--s4);border-radius:var(--r);
+  background:var(--card);border:1px solid var(--line-soft);
+  text-align:left;min-width:150px;transition:border-color .15s
+}
+.room:hover{border-color:var(--line)}
+.room b{display:block;font-size:16px;font-weight:700}
+.room span{font-size:12px;color:var(--ink-faint)}
+.room[aria-selected=true]{border-color:transparent;box-shadow:inset 0 0 0 2px currentColor}
+.room[data-r="지혜의 숲"][aria-selected=true]{color:var(--forest)}
+.room[data-r="모둠학습실"][aria-selected=true]{color:var(--indigo)}
+.room[aria-selected=true] b,.room[aria-selected=true] span{color:var(--ink)}
+
+.periods{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s4);overflow-x:auto;padding-bottom:var(--s1)}
+.periods .lbl{font-size:12px;color:var(--ink-soft);flex:0 0 auto;margin-right:var(--s1)}
+.per{
+  position:relative;flex:0 0 auto;width:46px;height:46px;border-radius:var(--r);
+  background:var(--card);border:1px solid var(--line-soft);font-size:16px;font-weight:600;
+  font-variant-numeric:tabular-nums;transition:transform .12s
+}
+.per:hover{transform:translateY(-2px)}
+.per[aria-selected=true]{background:var(--ink);color:#EFF1EC;border-color:var(--ink)}
+.per .mark{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--absent)}
+
+/* ---------- summary ---------- */
+.summary{
+  display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap;
+  margin-top:var(--s5);padding:var(--s3) var(--s4);
+  background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r)
+}
+.tally{display:flex;gap:var(--s4);flex-wrap:wrap;font-size:13px;font-variant-numeric:tabular-nums}
+.tally i{font-style:normal;color:var(--ink-faint);margin-right:5px}
+.tally b{font-weight:700}
+.tally .n-absent b{color:var(--absent)} .tally .n-late b{color:var(--late)} .tally .n-early b{color:var(--early)}
+.summary .acts{margin-left:auto;display:flex;gap:var(--s2);align-items:center}
+.btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);font-size:13px;font-weight:600;background:var(--card);transition:background .15s}
+.btn:hover{background:#F3F5F0}
+.btn-dark{background:var(--ink);color:#EFF1EC;border-color:var(--ink)}
+.btn-dark:hover{background:#26362D}
+.saved{font-size:12px;color:var(--ink-faint)}
+
+.hint{margin-top:var(--s3);font-size:13px;color:var(--ink-soft)}
+
+/* ---------- student grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:var(--s2);margin-top:var(--s4)}
+.stu{
+  position:relative;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);
+  overflow:hidden;transition:border-color .15s
+}
+.stu:hover{border-color:var(--line)}
+.stu::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:transparent;z-index:1}
+.stu-main{
+  width:100%;text-align:left;padding:var(--s3) var(--s3) var(--s3) var(--s4);
+  display:flex;align-items:baseline;gap:var(--s2);transition:transform .1s
+}
+.stu-main:active{transform:scale(.98)}
+.ban{
+  flex:0 0 auto;font-size:11px;font-weight:700;line-height:1;
+  padding:4px 6px;border-radius:5px;color:#fff;background:var(--c,var(--b0))
+}
+.ban[data-b="1"]{--c:var(--b1)} .ban[data-b="2"]{--c:var(--b2)}
+.ban[data-b="3"]{--c:var(--b3)} .ban[data-b="4"]{--c:var(--b4)}
+.ban[data-b="5"]{--c:var(--b5)} .ban[data-b="6"]{--c:var(--b6)}
+.ban[data-b="7"]{--c:var(--b7)} .ban[data-b="8"]{--c:var(--b8)}
+.stu .sid{font-size:11px;color:var(--ink-faint);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.stu .nm{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.stu .tag{margin-left:auto;font-size:12px;font-weight:700;flex:0 0 auto}
+.stu-memo{
+  width:100%;text-align:left;padding:7px var(--s3) 9px var(--s4);
+  border-top:1px dashed currentColor;font-size:12px;line-height:1.4;
+  display:flex;gap:6px;align-items:flex-start
+}
+.stu-memo .why{flex:1;min-width:0;word-break:break-word}
+.stu-memo .ask{color:var(--ink-faint);font-weight:600}
+.stu-memo .pen{flex:0 0 auto;opacity:.55;font-size:11px}
+.stu-memo:hover{background:rgba(0,0,0,.03)}
+.stu[data-st="B"]{background:#FCF1F0;border-color:#EBC8C5}
+.stu[data-st="B"]::before{background:var(--absent)} .stu[data-st="B"] .tag{color:var(--absent)}
+.stu[data-st="B"] .stu-memo{border-top-color:#E4C0BC;color:var(--absent)}
+.stu[data-st="L"]{background:#FDF6E8;border-color:#E9D7AF}
+.stu[data-st="L"]::before{background:var(--late)} .stu[data-st="L"] .tag{color:var(--late)}
+.stu[data-st="L"] .stu-memo{border-top-color:#E3D0A6;color:var(--late)}
+.stu[data-st="E"]{background:#F0F4FA;border-color:#C7D4E8}
+.stu[data-st="E"]::before{background:var(--early)} .stu[data-st="E"] .tag{color:var(--early)}
+.stu[data-st="E"] .stu-memo{border-top-color:#C0CEE4;color:var(--early)}
+
+/* ---------- 사유 입력 ---------- */
+.modal{position:fixed;inset:0;background:rgba(20,32,26,.42);display:grid;place-items:end center;z-index:60;padding:var(--s4)}
+.modal[hidden]{display:none}
+@media (min-width:600px){.modal{place-items:center}}
+.sheet{
+  background:var(--card);border-radius:14px;padding:var(--s5);width:100%;max-width:420px;
+  box-shadow:0 18px 44px rgba(20,32,26,.22)
+}
+.sheet h3{font-family:var(--serif);font-size:19px;margin-bottom:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:var(--s4) 0 var(--s3)}
+.chip{padding:7px 12px;border:1px solid var(--line);border-radius:999px;font-size:13px;transition:background .12s}
+.chip:hover{background:#F3F5F0}
+.chip[aria-pressed=true]{background:var(--ink);color:#EFF1EC;border-color:var(--ink)}
+.sheet input[type=email],.sheet input[type=password],.sheet input[type=text]{width:100%;border:1px solid var(--line-soft);border-radius:8px;padding:10px var(--s3);font-size:15px;background:#FBFCFA}
+
+.banbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:var(--s4)}
+.banbar .lbl{font-size:12px;color:var(--ink-soft);margin-right:2px}
+.bchip{
+  padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;
+  border:1px solid var(--line);background:var(--card);transition:background .12s
+}
+.bchip:hover{background:#F3F5F0}
+.bchip[data-b]{border-color:color-mix(in srgb,var(--c,var(--b0)) 45%,transparent)}
+.bchip[data-b="1"]{--c:var(--b1)} .bchip[data-b="2"]{--c:var(--b2)}
+.bchip[data-b="3"]{--c:var(--b3)} .bchip[data-b="4"]{--c:var(--b4)}
+.bchip[data-b="5"]{--c:var(--b5)} .bchip[data-b="6"]{--c:var(--b6)}
+.bchip[data-b="7"]{--c:var(--b7)} .bchip[data-b="8"]{--c:var(--b8)}
+.bchip[aria-pressed=true]{background:var(--c,var(--ink));border-color:var(--c,var(--ink));color:#fff}
+.gh{
+  grid-column:1/-1;width:100%;display:flex;align-items:center;gap:var(--s2);
+  margin:var(--s3) 0 2px;font-size:12px;font-weight:700;color:var(--ink-soft)
+}
+.gh::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+.gh i{font-style:normal;width:9px;height:9px;border-radius:3px;background:var(--c,var(--b0))}
+.gh[data-b="1"]{--c:var(--b1)} .gh[data-b="2"]{--c:var(--b2)}
+.gh[data-b="3"]{--c:var(--b3)} .gh[data-b="4"]{--c:var(--b4)}
+.gh[data-b="5"]{--c:var(--b5)} .gh[data-b="6"]{--c:var(--b6)}
+.gh[data-b="7"]{--c:var(--b7)} .gh[data-b="8"]{--c:var(--b8)}
+.gh b{font-weight:400;color:var(--ink-faint)}
+
+.empty{padding:var(--s6);text-align:center;color:var(--ink-soft);background:var(--card);border:1px dashed var(--line);border-radius:var(--r);margin-top:var(--s4)}
+
+/* ---------- panels / tables ---------- */
+section[hidden]{display:none}
+.panel{background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);padding:var(--s4);margin-top:var(--s4)}
+h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:var(--s1)}
+h3{font-size:14px;font-weight:700;margin-bottom:var(--s3)}
+.sub{font-size:13px;color:var(--ink-soft);margin-bottom:var(--s4)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line-soft)}
+th{font-size:12px;font-weight:600;color:var(--ink-soft)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+.zero{color:var(--ink-faint)}
+
+.rowedit{display:flex;align-items:center;gap:var(--s2);padding:8px 0;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+.rowedit .no{width:30px;font-size:12px;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+.rowedit input{border:1px solid var(--line-soft);border-radius:6px;padding:6px 8px;font-size:14px;background:#FBFCFA}
+.rowedit input.sid{width:74px;font-variant-numeric:tabular-nums}
+.rowedit input.nm{width:110px}
+.rowedit .spacer{margin-left:auto}
+.rowedit.addrow{border-bottom:none;margin-top:var(--s2);padding:10px 8px;background:#F5F7F3;border-radius:8px}
+.rowedit.addrow .no{color:var(--ink-faint);font-size:15px}
+.mini{font-size:12px;font-weight:600;padding:6px 10px;border:1px solid var(--line);border-radius:7px}
+.mini:hover{background:#F3F5F0}
+.mini.danger{color:var(--absent);border-color:#E3C3C0}
+textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-radius:8px;padding:var(--s3);font-size:14px;background:#FBFCFA;resize:vertical}
+.toolbar{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center;margin-bottom:var(--s4)}
+.toolbar .spacer{margin-left:auto}
+.legend{display:flex;gap:var(--s4);font-size:12px;color:var(--ink-soft);margin-top:var(--s3);flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.legend .l-b::before{background:var(--absent)} .legend .l-l::before{background:var(--late)}
+.legend .l-e::before{background:var(--early)} .legend .l-a::before{background:var(--line)}
+
+
+.toast{
+  position:fixed;left:50%;bottom:20px;transform:translate(-50%,12px);
+  background:var(--ink);color:#EFF1EC;padding:10px 18px;border-radius:999px;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:50
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:560px){
+  .brand{font-size:24px}
+  .dateline{font-size:20px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .stu{padding-left:var(--s3)}
+  .stu .nm{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hdr">
+      <div class="idblock">
+        <button class="emblem has" id="emblem" aria-label="학교 교표 바꾸기">교표</button>
+        <div class="brand">정시반 출석부<small>풍산고등학교 3학년 · 지혜의 숲 · 모둠학습실</small></div>
+      </div>
+      <div class="views" role="tablist" aria-label="화면 전환">
+        <button role="tab" data-view="check" aria-selected="true">출석</button>
+        <button role="tab" data-view="log" aria-selected="false">기록</button>
+        <button role="tab" data-view="roster" aria-selected="false">명단</button>
+      </div>
+      <input type="file" id="emblemFile" accept="image/*" hidden>
+    </div>
+
+    <div class="datebar" id="datebar">
+      <button class="step" id="prevDay" aria-label="이전 날짜">‹</button>
+      <div class="dateline" id="dateline">—</div>
+      <span class="pill" id="periodPill">—</span>
+      <button class="step" id="nextDay" aria-label="다음 날짜">›</button>
+      <input type="date" id="datePick" aria-label="날짜 선택">
+      <button class="ghost" id="todayBtn">오늘로</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ 출석 ============ -->
+  <section id="view-check">
+    <div class="rooms" id="rooms" role="tablist" aria-label="학습실"></div>
+    <div class="periods" id="periods" role="tablist" aria-label="교시"></div>
+    <div class="banbar" id="banbar" aria-label="반 고르기"></div>
+
+    <div class="summary">
+      <div class="tally" id="tally"></div>
+      <div class="acts">
+        <span class="saved" id="saved"></span>
+        <button class="btn" id="resetPeriod">이 교시 전원 출석</button>
+      </div>
+    </div>
+
+    <p class="hint">이름을 누를 때마다 <b>출석 → 결석 → 지각 → 조퇴</b> 순으로 바뀝니다. 기본값은 출석이라 빠진 학생만 눌러주면 됩니다. <b>결석과 조퇴는 누른 교시부터 그날 마지막 교시까지 자동으로 이어지고</b>, 지각은 해당 교시에만 표시됩니다. 사유도 함께 따라갑니다.</p>
+
+    <div class="grid" id="grid"></div>
+    <div class="legend">
+      <span class="l-a">출석</span><span class="l-b">결석</span><span class="l-l">지각</span><span class="l-e">조퇴</span>
+    </div>
+  </section>
+
+  <!-- ============ 기록 ============ -->
+  <section id="view-log" hidden>
+    <div class="panel">
+      <div class="toolbar">
+        <button class="mini" id="prevMonth">‹ 이전 달</button>
+        <h2 id="monthTitle" style="margin:0">—</h2>
+        <button class="mini" id="nextMonth">다음 달 ›</button>
+        <span class="spacer"></span>
+        <button class="btn" id="csvSum">누계 CSV</button>
+        <button class="btn" id="csvDetail">상세 CSV</button>
+      </div>
+      <h3>학생별 누계</h3>
+      <p class="sub">교시 단위 집계입니다. 결석이 많은 순으로 정렬됩니다.</p>
+      <div id="sumTable"></div>
+    </div>
+
+    <div class="panel">
+      <h3>날짜별 요약</h3>
+      <div id="dayTable"></div>
+    </div>
+
+    <div class="panel">
+      <h3>감독 교사가 남긴 사유</h3>
+      <p class="sub">사유가 적힌 건만 모아 보여줍니다.</p>
+      <div id="memoTable"></div>
+    </div>
+  </section>
+
+  <!-- ============ 명단 ============ -->
+  <section id="view-roster" hidden>
+    <div class="panel">
+      <div class="toolbar">
+        <h2 style="margin:0">명단 관리</h2>
+        <span class="spacer"></span>
+        <button class="btn" id="restore">원본 명단으로</button>
+      </div>
+      <p class="sub">학습실 안에서 반별로 묶어 보여줍니다. 학번을 고치면 반도 따라 바뀝니다. 학번과 이름 칸을 고치면 바로 저장됩니다. 각 학습실 맨 아래 칸에 학번과 이름을 넣고 <b>추가</b>를 누르면 학생이 들어갑니다. <b>이동</b>은 다른 학습실로 옮깁니다.</p>
+      <div id="rosterEdit"></div>
+    </div>
+
+    <div class="panel" id="acctPanel" hidden>
+      <h3>공유 계정</h3>
+      <p class="sub" id="acctWho">—</p>
+      <div class="toolbar" style="margin:0">
+        <button class="mini" id="syncNow">지금 동기화</button>
+        <button class="mini danger" id="signOut">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>백업과 옮기기</h3>
+      <p class="sub">기록은 이 브라우저에 저장됩니다. 다른 기기로 옮기거나 학기말에 보관할 때 쓰세요.</p>
+      <div class="toolbar" style="margin:0">
+        <button class="btn" id="backupSave">백업 파일 내려받기</button>
+        <button class="btn" id="backupPick">백업 불러오기</button>
+        <input type="file" id="backupFile" accept="application/json,.json" hidden>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>학교 교표</h3>
+      <p class="sub">풍산고등학교 교표가 기본으로 들어가 있습니다. 다른 이미지로 바꾸려면 파일을 올리세요.</p>
+      <div class="toolbar" style="margin:0">
+        <button class="btn" id="emblemPick">이미지 올리기</button>
+        <button class="mini" id="emblemDel">기본 교표로</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>명단 붙여넣기</h3>
+      <p class="sub">한 줄에 <b>학번 이름</b> 형식으로 넣으세요. 탭·쉼표·공백 모두 됩니다. 넣는 학습실을 고른 뒤 불러오면 그 학습실 명단이 교체됩니다.</p>
+      <textarea id="pasteBox" placeholder="3104 김동우&#10;3106 김서진&#10;3107 김예원"></textarea>
+      <div class="toolbar" style="margin:12px 0 0">
+        <select id="pasteRoom" class="mini" style="padding:7px 10px"></select>
+        <button class="btn btn-dark" id="pasteGo">불러오기</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h3 id="mTitle">사유 적기</h3>
+    <p class="sub" id="mWho" style="margin-bottom:0">—</p>
+    <div class="chips" id="mChips"></div>
+    <input type="text" id="mText" placeholder="직접 적기 (예: 보건실, 담임 상담)" aria-label="사유">
+    <div class="toolbar" style="margin:20px 0 0">
+      <button class="mini danger" id="mClear">사유 지우기</button>
+      <span class="spacer"></span>
+      <button class="mini" id="mCancel">취소</button>
+      <button class="btn btn-dark" id="mSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="login" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="lgTitle">
+    <h3 id="lgTitle">교사 로그인</h3>
+    <p class="sub" id="lgMsg" style="margin-bottom:16px">공유 출석부입니다. 학교에서 발급받은 계정으로 들어가세요.</p>
+    <input type="email" id="lgEmail" placeholder="이메일" autocomplete="username" aria-label="이메일" style="width:100%;margin-bottom:8px">
+    <input type="password" id="lgPw" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호" style="width:100%">
+    <div class="toolbar" style="margin:20px 0 0">
+      <span class="spacer"></span>
+      <button class="btn btn-dark" id="lgGo">들어가기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="ask" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="askTitle">
+    <h3 id="askTitle">확인</h3>
+    <p class="sub" id="askMsg" style="margin-bottom:0">—</p>
+    <div class="toolbar" style="margin:20px 0 0">
+      <span class="spacer"></span>
+      <button class="mini" id="askNo">취소</button>
+      <button class="btn btn-dark" id="askYes">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- 기본 명단 ---------------- */
+var SEED = [
+["지혜의 숲","3104","김동우"],["지혜의 숲","3106","김서진"],["지혜의 숲","3107","김예원"],
+["지혜의 숲","3131","한정미"],["지혜의 숲","3203","김건우"],["지혜의 숲","3208","김태우"],
+["지혜의 숲","3212","박윤진"],["지혜의 숲","3213","반서영"],["지혜의 숲","3214","백승효"],
+["지혜의 숲","3215","서아민"],["지혜의 숲","3217","신세호"],["지혜의 숲","3220","오유진"],
+["지혜의 숲","3221","유지원"],["지혜의 숲","3226","장현서"],["지혜의 숲","3228","최은찬"],
+["지혜의 숲","3230","최호준"],["지혜의 숲","3302","강지원"],["지혜의 숲","3303","권희재"],
+["지혜의 숲","3304","김건우"],["지혜의 숲","3306","김남형"],["지혜의 숲","3310","김진원"],
+["지혜의 숲","3312","박호태"],["지혜의 숲","3316","소형경"],["지혜의 숲","3320","염지윤"],
+["지혜의 숲","3321","유지민"],["지혜의 숲","3329","최유담"],["지혜의 숲","3401","김관주"],
+["지혜의 숲","3404","김지유"],["지혜의 숲","3408","류기욱"],["지혜의 숲","3413","손민정"],
+["지혜의 숲","3418","오가은"],["지혜의 숲","3421","장건우"],["지혜의 숲","3423","전용성"],
+["지혜의 숲","3426","조연우"],["지혜의 숲","3504","김다인"],["지혜의 숲","3505","김민호"],
+["지혜의 숲","3508","김지후"],["지혜의 숲","3509","남선주"],["지혜의 숲","3511","박준서"],
+["지혜의 숲","3512","박준희"],["지혜의 숲","3513","박줄리하"],["지혜의 숲","3527","조윤아"],
+["지혜의 숲","3529","한윤종"],["지혜의 숲","3607","김은솔"],["지혜의 숲","3609","박민호"],
+["모둠학습실","3612","박지훈"],["모둠학습실","3614","안준형"],["모둠학습실","3615","양지혁"],
+["모둠학습실","3701","강시연"],["모둠학습실","3705","김서연"],["모둠학습실","3708","문준규"],
+["모둠학습실","3711","성지훈"],["모둠학습실","3712","송민섭"],["모둠학습실","3713","신우성"],
+["모둠학습실","3714","신재우"],["모둠학습실","3717","유정우"],["모둠학습실","3718","윤태경"],
+["모둠학습실","3719","윤형준"],["모둠학습실","3723","임시후"],["모둠학습실","3725","정광표"],
+["모둠학습실","3726","조승훈"],["모둠학습실","3728","황채원"],["모둠학습실","3729","황현지"],
+["모둠학습실","3803","김규림"],["모둠학습실","3805","김시안"],["모둠학습실","3815","이동호"],
+["모둠학습실","3821","장민혁"],["모둠학습실","3822","전민욱"]
+].map(function(r){return {room:r[0],sid:r[1],name:r[2]};});
+
+/* =========================================================
+   공유 설정 — 여기 두 줄만 채우면 여러 선생님이 같은 기록을 봅니다.
+   apiKey를 비워두면 예전처럼 이 기기에만 저장됩니다.
+   ========================================================= */
+var FB = {
+  projectId: "poongsann",
+  apiKey: "",                 // Firebase 콘솔 → 프로젝트 설정 → 웹 API 키
+  collection: "jeongsiban"
+};
+var SHARED = !!FB.apiKey;
+
+var DEFAULT_EMBLEM = "data:image/png;base64,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";
+
+var ROOMS = ["지혜의 숲","모둠학습실"];
+var LABEL = {A:"출석",B:"결석",L:"지각",E:"조퇴"};
+var CYCLE = {A:"B",B:"L",L:"E",E:"A"};
+var DOW = ["일","월","화","수","목","금","토"];
+
+/* ---------------- 저장소 ---------------- */
+/* 저장 위치를 자동으로 고른다.
+   1) Claude 앱 안 → window.storage
+   2) 웹에 올렸을 때 → 브라우저 localStorage
+   3) 둘 다 막혔을 때 → 메모리 (새로고침하면 사라짐) */
+var mem = {};
+var PREFIX = "jsb.";
+var MODE = "memory";
+(function(){
+  if(typeof window !== "undefined" && window.storage && typeof window.storage.get === "function"){
+    MODE = "claude"; return;
+  }
+  try{
+    var k = "__jsb_test__";
+    window.localStorage.setItem(k,"1");
+    window.localStorage.removeItem(k);
+    MODE = "local";
+  }catch(e){ MODE = "memory"; }
+})();
+
+function sget(key){
+  if(MODE === "claude"){
+    return window.storage.get(key).then(function(r){
+      if(!r || !r.value) return null;
+      try{ return JSON.parse(r.value); }catch(e){ return null; }
+    }).catch(function(){ return null; });
+  }
+  if(MODE === "local"){
+    try{
+      var raw = window.localStorage.getItem(PREFIX + key);
+      return Promise.resolve(raw == null ? null : JSON.parse(raw));
+    }catch(e){ return Promise.resolve(null); }
+  }
+  return Promise.resolve(mem[key] !== undefined ? mem[key] : null);
+}
+
+function sset(key,val){
+  mem[key] = val;
+  if(MODE === "claude"){
+    return window.storage.set(key, JSON.stringify(val)).then(function(){return true;}).catch(function(){return false;});
+  }
+  if(MODE === "local"){
+    try{ window.localStorage.setItem(PREFIX + key, JSON.stringify(val)); return Promise.resolve(true); }
+    catch(e){ return Promise.resolve(false); }
+  }
+  return Promise.resolve(true);
+}
+
+/* ---------------- 로그인 ---------------- */
+var AUTH = {idToken:"", refreshToken:"", exp:0, email:""};
+function authLoad(){
+  try{ var r = JSON.parse(window.localStorage.getItem("jsb.auth") || "null"); if(r) AUTH = r; }catch(e){}
+}
+function authSave(){
+  try{ window.localStorage.setItem("jsb.auth", JSON.stringify(AUTH)); }catch(e){}
+}
+function authClear(){
+  AUTH = {idToken:"", refreshToken:"", exp:0, email:""};
+  try{ window.localStorage.removeItem("jsb.auth"); }catch(e){}
+}
+function signIn(email, pw){
+  return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FB.apiKey, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({email:email, password:pw, returnSecureToken:true})
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(j.error) throw new Error(j.error.message || "로그인 실패");
+    AUTH = {idToken:j.idToken, refreshToken:j.refreshToken, exp:Date.now() + (+j.expiresIn - 60)*1000, email:j.email};
+    authSave();
+    return true;
+  });
+}
+function ensureToken(){
+  if(!SHARED) return Promise.reject(new Error("공유 꺼짐"));
+  if(AUTH.idToken && Date.now() < AUTH.exp) return Promise.resolve(AUTH.idToken);
+  if(!AUTH.refreshToken) return Promise.reject(new Error("로그인 필요"));
+  return fetch("https://securetoken.googleapis.com/v1/token?key=" + FB.apiKey, {
+    method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(AUTH.refreshToken)
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(j.error || !j.id_token) throw new Error("로그인 필요");
+    AUTH.idToken = j.id_token;
+    AUTH.refreshToken = j.refresh_token || AUTH.refreshToken;
+    AUTH.exp = Date.now() + (+j.expires_in - 60)*1000;
+    authSave();
+    return AUTH.idToken;
+  });
+}
+
+/* ---------------- Firestore (SDK 없이 REST) ---------------- */
+function docUrl(id){
+  return "https://firestore.googleapis.com/v1/projects/" + FB.projectId +
+         "/databases/(default)/documents/" + FB.collection + "/" + id;
+}
+function fsGet(id){
+  return ensureToken().then(function(t){
+    return fetch(docUrl(id), {headers:{Authorization:"Bearer " + t}});
+  }).then(function(r){
+    if(r.status === 404) return null;
+    if(!r.ok) throw new Error("읽기 실패 " + r.status);
+    return r.json();
+  }).then(function(j){
+    if(!j || !j.fields || !j.fields.data) return null;
+    try{ return JSON.parse(j.fields.data.stringValue); }catch(e){ return null; }
+  });
+}
+function fsPut(id, obj){
+  return ensureToken().then(function(t){
+    return fetch(docUrl(id) + "?updateMask.fieldPaths=data&updateMask.fieldPaths=updatedAt", {
+      method:"PATCH",
+      headers:{Authorization:"Bearer " + t, "Content-Type":"application/json"},
+      body: JSON.stringify({fields:{
+        data:{stringValue: JSON.stringify(obj)},
+        updatedAt:{stringValue: new Date().toISOString() + " / " + (AUTH.email || "")}
+      }})
+    });
+  }).then(function(r){
+    if(!r.ok) throw new Error("쓰기 실패 " + r.status);
+    return true;
+  });
+}
+
+/* ---------------- 변경분 큐 (동시 편집 대비) ---------------- */
+var PENDING = [];
+function pendLoad(){ try{ PENDING = JSON.parse(window.localStorage.getItem("jsb.pending") || "[]"); }catch(e){ PENDING = []; } }
+function pendSave(){ try{ window.localStorage.setItem("jsb.pending", JSON.stringify(PENDING)); }catch(e){} }
+function pendPush(op){ if(!SHARED) return; PENDING.push(op); pendSave(); }
+function applyOps(base, ops){
+  ops.forEach(function(o){
+    if(!base[o.d]) base[o.d] = {};
+    if(o.v === null){
+      if(base[o.d][o.sid]){
+        delete base[o.d][o.sid][o.p];
+        if(!Object.keys(base[o.d][o.sid]).length) delete base[o.d][o.sid];
+      }
+    }else{
+      if(!base[o.d][o.sid]) base[o.d][o.sid] = {};
+      base[o.d][o.sid][o.p] = o.v;
+    }
+    if(!Object.keys(base[o.d]).length) delete base[o.d];
+  });
+  return base;
+}
+
+var syncBusy = false;
+function setSync(txt){ var el = document.getElementById("saved"); if(el) el.textContent = txt; }
+
+function syncPush(){
+  if(!SHARED || syncBusy) return Promise.resolve();
+  var mine = PENDING.filter(function(o){ return o.k === S.monthKey; });
+  syncBusy = true;
+  setSync("동기화 중");
+  return fsGet(S.monthKey).then(function(remote){
+    var merged = applyOps(remote || {}, mine);
+    return fsPut(S.monthKey, merged).then(function(){
+      PENDING = PENDING.filter(function(o){ return o.k !== S.monthKey; });
+      pendSave();
+      S.month = merged;
+      sset(S.monthKey, merged);
+      setSync("공유됨");
+      renderCheck();
+    });
+  }).catch(function(e){
+    setSync(/로그인/.test(e.message) ? "로그인 필요" : "오프라인 — 연결되면 올라갑니다");
+    if(/로그인/.test(e.message)) showLogin();
+  }).then(function(){ syncBusy = false; });
+}
+
+function syncPull(){
+  if(!SHARED || syncBusy || PENDING.length) return;
+  fsGet(S.monthKey).then(function(remote){
+    if(!remote) return;
+    if(JSON.stringify(remote) === JSON.stringify(S.month)) return;
+    S.month = remote;
+    sset(S.monthKey, remote);
+    renderCheck();
+    setSync("공유됨");
+  }).catch(function(){});
+  fsGet("roster").then(function(r){
+    if(!r || !r.length) return;
+    if(JSON.stringify(r) === JSON.stringify(S.roster)) return;
+    S.roster = r;
+    sset("roster.v1", r);
+    renderCheck();
+    if(!document.getElementById("view-roster").hidden) renderRoster();
+  }).catch(function(){});
+}
+
+function showLogin(){
+  if(!SHARED) return;
+  document.getElementById("login").hidden = false;
+  setTimeout(function(){ document.getElementById("lgEmail").focus(); }, 40);
+}
+
+/* ---------------- 상태 ---------------- */
+var S = {
+  date: iso(new Date()),
+  logMonth: iso(new Date()).slice(0,7),
+  room: ROOMS[0],
+  ban: "all",
+  period: 1,
+  roster: [],
+  month: {},          // { "YYYY-MM-DD": { sid: "B" | {p:st} } }
+  monthKey: ""
+};
+
+function iso(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function parseISO(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function esc(t){
+  return String(t).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+  });
+}
+function periodsOn(dateStr){
+  var d = parseISO(dateStr).getDay();
+  if(d===2||d===4) return 7;      // 화·목
+  if(d===0||d===6) return 6;      // 주말 (임시 자율)
+  return 6;                        // 월·수·금
+}
+function monthKeyOf(dateStr){ return "att." + dateStr.slice(0,7); }
+
+/* ---------------- 데이터 접근 ---------------- */
+function dayMap(){
+  if(!S.month[S.date]) S.month[S.date] = {};
+  return S.month[S.date];
+}
+/* 저장 형식: "B"  또는  {s:"B", r:"보건실"} — 예전 기록도 그대로 읽힘 */
+function normCell(v){
+  if(v == null) return null;
+  if(typeof v === "string") return {s:v, r:""};
+  return {s:v.s, r:v.r || ""};
+}
+function cellOf(sid, period, dateStr){
+  var day = S.month[dateStr || S.date];
+  if(!day || !day[sid]) return null;
+  return normCell(day[sid][String(period)]);
+}
+function statusOf(sid, period){ var c = cellOf(sid, period); return c ? c.s : "A"; }
+function reasonOf(sid, period){ var c = cellOf(sid, period); return c ? c.r : ""; }
+
+function setCell(sid, period, st, reason){
+  var day = dayMap();
+  var val = null;
+  if(st === "A"){
+    if(day[sid]){ delete day[sid][String(period)]; if(!Object.keys(day[sid]).length) delete day[sid]; }
+  }else{
+    if(!day[sid]) day[sid] = {};
+    val = reason ? {s:st, r:reason} : st;
+    day[sid][String(period)] = val;
+  }
+  if(!Object.keys(day).length) delete S.month[S.date];
+  pendPush({k:S.monthKey, d:S.date, sid:sid, p:String(period), v:val});
+  queueSave();
+}
+function setStatus(sid, period, st){
+  setCell(sid, period, st, st === "A" ? "" : reasonOf(sid, period));
+}
+/* 결석·조퇴는 이후 교시까지, 지각은 해당 교시만 */
+function applyStatus(sid, period, st){
+  var last = periodsOn(S.date);
+  if(st === "L"){ setCell(sid, period, "L", reasonOf(sid, period)); return 1; }
+  var reason = (st === "A") ? "" : reasonOf(sid, period);
+  var n = 0;
+  for(var p = period; p <= last; p++){ setCell(sid, p, st, reason); n++; }
+  return n;
+}
+
+var saveTimer = null;
+function queueSave(){
+  var el = document.getElementById("saved");
+  el.textContent = "저장 중";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    sset(S.monthKey, S.month).then(function(ok){
+      el.textContent = ok ? (SHARED ? "동기화 중" : "저장됨") : "저장 실패 — 화면을 닫지 마세요";
+      if(SHARED) syncPush();
+    });
+  }, 700);
+}
+
+function loadMonthFor(dateStr){
+  var key = monthKeyOf(dateStr);
+  if(key === S.monthKey) return Promise.resolve();
+  return sget(key).then(function(m){
+    S.monthKey = key;
+    S.month = m || {};
+    if(!SHARED) return;
+    return fsGet(key).then(function(remote){
+      if(remote){
+        S.month = applyOps(remote, PENDING.filter(function(o){ return o.k === key; }));
+        sset(key, S.month);
+      }
+      setSync("공유됨");
+    }).catch(function(e){
+      setSync(/로그인/.test(e.message) ? "로그인 필요" : "오프라인 — 저장된 기록만 보입니다");
+    });
+  });
+}
+
+/* ---------------- 렌더: 헤더 ---------------- */
+function renderDate(){
+  var d = parseISO(S.date);
+  document.getElementById("dateline").innerHTML =
+    (d.getMonth()+1) + "월 " + d.getDate() + "일 <span class='dow'>" + DOW[d.getDay()] + "요일</span>";
+  document.getElementById("datePick").value = S.date;
+  var n = periodsOn(S.date);
+  var day = d.getDay();
+  document.getElementById("periodPill").textContent =
+    (day===0||day===6) ? "주말 · " + n + "교시" : n + "교시까지";
+  if(S.period > n) S.period = n;
+}
+
+/* ---------------- 렌더: 학습실 / 교시 ---------------- */
+function inRoom(room){ return S.roster.filter(function(s){ return s.room === room; }); }
+function banOf(sid){ return (String(sid).length >= 2) ? String(sid).charAt(1) : "0"; }
+function seatOf(sid){ var t = String(sid); return t.length >= 2 ? t.slice(2) : t; }
+function visibleList(){
+  var list = inRoom(S.room);
+  return (S.ban === "all") ? list : list.filter(function(s){ return banOf(s.sid) === S.ban; });
+}
+function renderBanbar(){
+  var list = inRoom(S.room);
+  var bans = [];
+  list.forEach(function(s){ var b = banOf(s.sid); if(bans.indexOf(b) < 0) bans.push(b); });
+  bans.sort();
+  if(bans.indexOf(S.ban) < 0 && S.ban !== "all") S.ban = "all";
+  document.getElementById("banbar").innerHTML =
+    '<span class="lbl">반</span>' +
+    '<button class="bchip" data-ban="all" aria-pressed="'+(S.ban==="all")+'">전체 '+list.length+'</button>' +
+    bans.map(function(b){
+      var n = list.filter(function(s){ return banOf(s.sid) === b; }).length;
+      return '<button class="bchip" data-b="'+b+'" data-ban="'+b+'" aria-pressed="'+(S.ban===b)+'">'+b+'반 '+n+'</button>';
+    }).join("");
+}
+
+function renderRooms(){
+  var host = document.getElementById("rooms");
+  host.innerHTML = ROOMS.map(function(r){
+    var list = inRoom(r);
+    var off = list.filter(function(s){ return statusOf(s.sid, S.period) !== "A"; }).length;
+    return '<button class="room" role="tab" data-r="'+r+'" aria-selected="'+(r===S.room)+'">'+
+             '<b>'+r+'</b><span>'+list.length+'명'+(off? ' · 특이 '+off+'명':'')+'</span></button>';
+  }).join("");
+}
+
+function renderPeriods(){
+  var n = periodsOn(S.date);
+  var host = document.getElementById("periods");
+  var out = '<span class="lbl">교시</span>';
+  for(var i=1;i<=n;i++){
+    var any = S.roster.some(function(s){ return statusOf(s.sid, i) !== "A"; });
+    out += '<button class="per" role="tab" data-p="'+i+'" aria-selected="'+(i===S.period)+'" aria-label="'+i+'교시">'+
+             i + (any? '<span class="mark"></span>' : '') + '</button>';
+  }
+  host.innerHTML = out;
+}
+
+/* ---------------- 렌더: 학생 그리드 ---------------- */
+function studentCard(s){
+  var st = statusOf(s.sid, S.period);
+  var why = reasonOf(s.sid, S.period);
+  var memo = (st === "A") ? "" :
+    '<button class="stu-memo" data-memo="'+s.sid+'" aria-label="'+s.name+' 사유 적기">'+
+      (why ? '<span class="why">'+esc(why)+'</span>' : '<span class="ask">사유 적기</span>')+
+      '<span class="pen">✎</span></button>';
+  return '<div class="stu" data-st="'+st+'">'+
+           '<button class="stu-main" data-sid="'+s.sid+'" aria-label="'+banOf(s.sid)+'반 '+s.name+' '+LABEL[st]+'">'+
+             '<span class="ban" data-b="'+banOf(s.sid)+'">'+banOf(s.sid)+'반</span>'+
+             '<span class="sid">'+seatOf(s.sid)+'</span><span class="nm">'+s.name+'</span>'+
+             (st!=="A" ? '<span class="tag">'+LABEL[st]+'</span>' : '') +
+           '</button>' + memo +
+         '</div>';
+}
+
+function renderGrid(){
+  var list = visibleList();
+  var host = document.getElementById("grid");
+  if(!list.length){
+    host.innerHTML = '<div class="empty">'+
+      (S.ban === "all"
+        ? '이 학습실에 배정된 학생이 없습니다. 명단 화면에서 학생을 옮겨주세요.'
+        : S.ban + '반 학생이 이 학습실에는 없습니다.') + '</div>';
+  }else if(S.ban === "all"){
+    var out = "", cur = null;
+    list.forEach(function(s){
+      var b = banOf(s.sid);
+      if(b !== cur){
+        cur = b;
+        var n = list.filter(function(x){ return banOf(x.sid) === b; }).length;
+        var off = list.filter(function(x){ return banOf(x.sid) === b && statusOf(x.sid, S.period) !== "A"; }).length;
+        out += '<div class="gh" data-b="'+b+'"><i></i>'+b+'반 <b>'+n+'명'+(off ? ' · 특이 '+off : '')+'</b></div>';
+      }
+      out += studentCard(s);
+    });
+    host.innerHTML = out;
+  }else{
+    host.innerHTML = list.map(studentCard).join("");
+  }
+  var t = {A:0,B:0,L:0,E:0};
+  list.forEach(function(s){ t[statusOf(s.sid,S.period)]++; });
+  document.getElementById("tally").innerHTML =
+    '<span><i>출석</i><b>'+t.A+'</b></span>'+
+    '<span class="n-absent"><i>결석</i><b>'+t.B+'</b></span>'+
+    '<span class="n-late"><i>지각</i><b>'+t.L+'</b></span>'+
+    '<span class="n-early"><i>조퇴</i><b>'+t.E+'</b></span>';
+}
+
+function renderCheck(){ renderDate(); renderRooms(); renderPeriods(); renderBanbar(); renderGrid(); }
+
+/* ---------------- 기록 ---------------- */
+function renderLog(){
+  document.getElementById("monthTitle").textContent =
+    S.logMonth.slice(0,4) + "년 " + Number(S.logMonth.slice(5,7)) + "월";
+
+  sget("att." + S.logMonth).then(function(m){
+    m = m || {};
+    if("att." + S.logMonth === S.monthKey) m = S.month;
+
+    var per = {};
+    S.roster.forEach(function(s){ per[s.sid] = {B:0,L:0,E:0}; });
+    var days = Object.keys(m).sort();
+
+    days.forEach(function(dt){
+      Object.keys(m[dt]).forEach(function(sid){
+        if(!per[sid]) per[sid] = {B:0,L:0,E:0};
+        var rec = m[dt][sid];
+        Object.keys(rec).forEach(function(p){
+          var st = normCell(rec[p]).s;
+          if(per[sid][st] !== undefined) per[sid][st]++;
+        });
+      });
+    });
+
+    var rows = S.roster.map(function(s){
+      var c = per[s.sid] || {B:0,L:0,E:0};
+      return {sid:s.sid,name:s.name,room:s.room,B:c.B,L:c.L,E:c.E,sum:c.B+c.L+c.E};
+    }).filter(function(r){ return r.sum > 0; })
+      .sort(function(a,b){ return b.B-a.B || b.sum-a.sum || a.sid.localeCompare(b.sid); });
+
+    var host = document.getElementById("sumTable");
+    if(!rows.length){
+      host.innerHTML = '<div class="empty">이 달에 기록된 결석·지각·조퇴가 없습니다.</div>';
+    }else{
+      host.innerHTML = '<table><thead><tr><th>학번</th><th>이름</th><th>학습실</th>'+
+        '<th class="num">결석</th><th class="num">지각</th><th class="num">조퇴</th><th class="num">계</th></tr></thead><tbody>'+
+        rows.map(function(r){
+          return '<tr><td class="num">'+r.sid+'</td><td>'+r.name+'</td><td>'+r.room+'</td>'+
+            '<td class="num'+(r.B?'':' zero')+'">'+r.B+'</td>'+
+            '<td class="num'+(r.L?'':' zero')+'">'+r.L+'</td>'+
+            '<td class="num'+(r.E?'':' zero')+'">'+r.E+'</td>'+
+            '<td class="num"><b>'+r.sum+'</b></td></tr>';
+        }).join("") + '</tbody></table>';
+    }
+
+    var dhost = document.getElementById("dayTable");
+    if(!days.length){
+      dhost.innerHTML = '<div class="empty">기록된 날짜가 없습니다.</div>';
+    }else{
+      dhost.innerHTML = '<table><thead><tr><th>날짜</th><th>요일</th><th class="num">결석</th><th class="num">지각</th><th class="num">조퇴</th></tr></thead><tbody>'+
+        days.map(function(dt){
+          var c = {B:0,L:0,E:0};
+          Object.keys(m[dt]).forEach(function(sid){
+            Object.keys(m[dt][sid]).forEach(function(p){ c[normCell(m[dt][sid][p]).s]++; });
+          });
+          var d = parseISO(dt);
+          return '<tr><td class="num">'+(d.getMonth()+1)+'.'+d.getDate()+'</td><td>'+DOW[d.getDay()]+'</td>'+
+            '<td class="num'+(c.B?'':' zero')+'">'+c.B+'</td><td class="num'+(c.L?'':' zero')+'">'+c.L+
+            '</td><td class="num'+(c.E?'':' zero')+'">'+c.E+'</td></tr>';
+        }).join("") + '</tbody></table>';
+    }
+    var memos = [];
+    var byId = {};
+    S.roster.forEach(function(x){ byId[x.sid] = x; });
+    days.forEach(function(dt){
+      Object.keys(m[dt]).forEach(function(sid){
+        Object.keys(m[dt][sid]).sort().forEach(function(p){
+          var c = normCell(m[dt][sid][p]);
+          if(c.r) memos.push({dt:dt, p:p, sid:sid, name:(byId[sid]||{}).name||"", st:c.s, why:c.r});
+        });
+      });
+    });
+    var mhost = document.getElementById("memoTable");
+    if(!memos.length){
+      mhost.innerHTML = '<div class="empty">적힌 사유가 없습니다.</div>';
+    }else{
+      mhost.innerHTML = '<table><thead><tr><th>날짜</th><th>교시</th><th>이름</th><th>상태</th><th>사유</th></tr></thead><tbody>'+
+        memos.map(function(x){
+          var d = parseISO(x.dt);
+          return '<tr><td class="num">'+(d.getMonth()+1)+'.'+d.getDate()+'</td><td class="num">'+x.p+'</td>'+
+            '<td>'+esc(x.name)+'</td><td>'+LABEL[x.st]+'</td><td>'+esc(x.why)+'</td></tr>';
+        }).join("") + '</tbody></table>';
+    }
+
+    window._logMonthData = m;
+  });
+}
+
+/* ---------------- 교표 ---------------- */
+function paintEmblem(dataUrl){
+  var el = document.getElementById("emblem");
+  if(dataUrl){
+    el.innerHTML = '<img src="'+dataUrl+'" alt="풍산고등학교 교표">';
+    el.classList.add("has");
+  }else{
+    el.textContent = "교표";
+    el.classList.remove("has");
+  }
+}
+function pickEmblem(){ document.getElementById("emblemFile").click(); }
+
+/* ---------------- 명단 ---------------- */
+function renderRoster(){
+  var host = document.getElementById("rosterEdit");
+  host.innerHTML = ROOMS.map(function(r){
+    var list = S.roster.filter(function(s){ return s.room === r; })
+      .sort(function(a,b){ return String(a.sid).localeCompare(String(b.sid)); });
+    var bans = [];
+    list.forEach(function(s){ var b = banOf(s.sid); if(bans.indexOf(b) < 0) bans.push(b); });
+    bans.sort();
+
+    var body = list.length ? bans.map(function(b){
+      var group = list.filter(function(s){ return banOf(s.sid) === b; });
+      return '<div class="gh" data-b="'+b+'" style="margin:14px 0 4px"><i></i>'+b+'반 <b>'+group.length+'명</b></div>' +
+        group.map(function(s){
+          var i = S.roster.indexOf(s);
+          return '<div class="rowedit" data-i="'+i+'">'+
+            '<span class="ban" data-b="'+b+'">'+b+'반</span>'+
+            '<input class="sid" value="'+s.sid+'" data-f="sid" aria-label="학번">'+
+            '<input class="nm" value="'+esc(s.name)+'" data-f="name" aria-label="이름">'+
+            '<span class="spacer"></span>'+
+            '<button class="mini" data-act="move">'+(r===ROOMS[0]?"모둠학습실로":"지혜의 숲으로")+'</button>'+
+            '<button class="mini danger" data-act="del">삭제</button></div>';
+        }).join("");
+    }).join("") : '<div class="empty">비어 있습니다.</div>';
+
+    return '<h3 style="margin:24px 0 0">'+r+' <span style="font-weight:400;color:var(--ink-faint)">'+
+             list.length+'명 · '+bans.length+'개 반</span></h3>' + body +
+      '<div class="rowedit addrow" data-room="'+r+'">'+
+        '<span class="no">＋</span>'+
+        '<input class="sid" data-nf="sid" placeholder="학번" aria-label="새 학생 학번">'+
+        '<input class="nm" data-nf="name" placeholder="이름" aria-label="새 학생 이름">'+
+        '<span class="spacer"></span>'+
+        '<button class="mini" data-act="add">추가</button></div>';
+  }).join("");
+
+  var sel = document.getElementById("pasteRoom");
+  if(!sel.options.length){
+    sel.innerHTML = ROOMS.map(function(r){ return '<option>'+r+'</option>'; }).join("");
+  }
+}
+
+function saveRoster(){
+  var p = sset("roster.v1", S.roster);
+  if(SHARED) p = p.then(function(){ return fsPut("roster", S.roster).catch(function(){ toast("명단을 아직 공유하지 못했습니다"); }); });
+  return p;
+}
+
+/* ---------------- CSV ---------------- */
+function download(name, text){
+  var blob = new Blob(["\uFEFF" + text], {type:"text/csv;charset=utf-8;"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  toast(name + " 내려받는 중");
+}
+function csvCell(v){ v = String(v==null?"":v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+
+function exportSummary(){
+  var m = window._logMonthData || {};
+  var per = {};
+  S.roster.forEach(function(s){ per[s.sid] = {B:0,L:0,E:0}; });
+  Object.keys(m).forEach(function(dt){
+    Object.keys(m[dt]).forEach(function(sid){
+      if(!per[sid]) per[sid] = {B:0,L:0,E:0};
+      Object.keys(m[dt][sid]).forEach(function(p){ per[sid][normCell(m[dt][sid][p]).s]++; });
+    });
+  });
+  var lines = [["학번","이름","학습실","결석","지각","조퇴","계"].join(",")];
+  S.roster.forEach(function(s){
+    var c = per[s.sid] || {B:0,L:0,E:0};
+    lines.push([s.sid,s.name,s.room,c.B,c.L,c.E,c.B+c.L+c.E].map(csvCell).join(","));
+  });
+  download("정시반_출석누계_"+S.logMonth+".csv", lines.join("\n"));
+}
+
+function exportDetail(){
+  var m = window._logMonthData || {};
+  var byId = {};
+  S.roster.forEach(function(s){ byId[s.sid] = s; });
+  var lines = [["날짜","요일","교시","학습실","학번","이름","상태","사유"].join(",")];
+  Object.keys(m).sort().forEach(function(dt){
+    var d = parseISO(dt);
+    Object.keys(m[dt]).sort().forEach(function(sid){
+      var rec = m[dt][sid], s = byId[sid] || {name:"",room:""};
+      Object.keys(rec).sort().forEach(function(p){
+        var c = normCell(rec[p]);
+        lines.push([dt, DOW[d.getDay()], p+"교시", s.room, sid, s.name, LABEL[c.s], c.r].map(csvCell).join(","));
+      });
+    });
+  });
+  if(lines.length === 1){ toast("내보낼 기록이 없습니다"); return; }
+  download("정시반_출석상세_"+S.logMonth+".csv", lines.join("\n"));
+}
+
+/* ---------------- 확인 창 ---------------- */
+var askResolve = null;
+function ask(msg){
+  document.getElementById("askMsg").textContent = msg;
+  document.getElementById("ask").hidden = false;
+  setTimeout(function(){ document.getElementById("askYes").focus(); }, 30);
+  return new Promise(function(res){ askResolve = res; });
+}
+function answer(v){
+  document.getElementById("ask").hidden = true;
+  if(askResolve){ var r = askResolve; askResolve = null; r(v); }
+}
+
+/* ---------------- 토스트 ---------------- */
+var toastTimer = null;
+function toast(msg){
+  var el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove("on"); }, 1900);
+}
+
+/* ---------------- 이벤트 ---------------- */
+function shiftDate(delta){
+  var d = parseISO(S.date); d.setDate(d.getDate()+delta); S.date = iso(d);
+  loadMonthFor(S.date).then(renderCheck);
+}
+document.getElementById("prevDay").onclick = function(){ shiftDate(-1); };
+document.getElementById("nextDay").onclick = function(){ shiftDate(1); };
+document.getElementById("todayBtn").onclick = function(){ S.date = iso(new Date()); loadMonthFor(S.date).then(renderCheck); };
+document.getElementById("datePick").onchange = function(e){
+  if(!e.target.value) return;
+  S.date = e.target.value; loadMonthFor(S.date).then(renderCheck);
+};
+
+document.getElementById("rooms").addEventListener("click", function(e){
+  var b = e.target.closest(".room"); if(!b) return;
+  S.room = b.dataset.r; S.ban = "all"; renderRooms(); renderBanbar(); renderGrid();
+});
+document.getElementById("banbar").addEventListener("click", function(e){
+  var c = e.target.closest(".bchip"); if(!c) return;
+  S.ban = c.dataset.ban; renderBanbar(); renderGrid();
+});
+document.getElementById("periods").addEventListener("click", function(e){
+  var b = e.target.closest(".per"); if(!b) return;
+  S.period = +b.dataset.p; renderPeriods(); renderRooms(); renderGrid();
+});
+document.getElementById("grid").addEventListener("click", function(e){
+  var memo = e.target.closest(".stu-memo");
+  if(memo){ openReason(memo.dataset.memo); return; }
+  var b = e.target.closest(".stu-main"); if(!b) return;
+  var sid = b.dataset.sid;
+  var next = CYCLE[statusOf(sid, S.period)];
+  var n = applyStatus(sid, S.period, next);
+  if(n > 1){
+    var last = periodsOn(S.date);
+    toast(next === "A"
+      ? S.period + "~" + last + "교시 출석으로 되돌림"
+      : LABEL[next] + " — " + S.period + "~" + last + "교시에 반영됨");
+  }
+  renderGrid(); renderPeriods(); renderRooms();
+});
+
+/* ---------- 사유 입력 ---------- */
+var PRESETS = ["병결","보건실","조퇴","담임 상담","보충·특강","대회·행사","가정 사정","무단"];
+var mSid = null;
+
+function openReason(sid){
+  var s = S.roster.filter(function(x){ return x.sid === sid; })[0];
+  if(!s) return;
+  mSid = sid;
+  var st = statusOf(sid, S.period), why = reasonOf(sid, S.period);
+  document.getElementById("mWho").textContent = s.sid + " " + s.name + " · " + S.period + "교시 " + LABEL[st];
+  document.getElementById("mText").value = why;
+  document.getElementById("mChips").innerHTML = PRESETS.map(function(p){
+    return '<button class="chip" data-p="'+p+'" aria-pressed="'+(p===why)+'">'+p+'</button>';
+  }).join("");
+  document.getElementById("modal").hidden = false;
+  setTimeout(function(){ document.getElementById("mText").focus(); }, 30);
+}
+function closeReason(){ document.getElementById("modal").hidden = true; mSid = null; }
+
+document.getElementById("mChips").addEventListener("click", function(e){
+  var c = e.target.closest(".chip"); if(!c) return;
+  document.getElementById("mText").value = c.dataset.p;
+  this.querySelectorAll(".chip").forEach(function(x){ x.setAttribute("aria-pressed", x === c); });
+});
+function spreadReason(sid, txt){
+  var st = statusOf(sid, S.period), last = periodsOn(S.date);
+  for(var p = S.period; p <= last && statusOf(sid, p) === st; p++) setCell(sid, p, st, txt);
+}
+document.getElementById("mSave").onclick = function(){
+  if(!mSid) return;
+  spreadReason(mSid, document.getElementById("mText").value.trim());
+  closeReason(); renderGrid();
+};
+document.getElementById("mClear").onclick = function(){
+  if(!mSid) return;
+  spreadReason(mSid, "");
+  closeReason(); renderGrid();
+};
+document.getElementById("mCancel").onclick = closeReason;
+document.getElementById("mText").addEventListener("keydown", function(e){
+  if(e.key === "Enter") document.getElementById("mSave").click();
+});
+document.getElementById("modal").addEventListener("click", function(e){
+  if(e.target === this) closeReason();
+});
+document.getElementById("askYes").onclick = function(){ answer(true); };
+document.getElementById("askNo").onclick  = function(){ answer(false); };
+document.getElementById("ask").addEventListener("click", function(e){ if(e.target === this) answer(false); });
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Escape") return;
+  if(!document.getElementById("ask").hidden) answer(false);
+  else if(!document.getElementById("modal").hidden) closeReason();
+});
+document.getElementById("resetPeriod").onclick = function(){
+  var list = visibleList();
+  var scope = S.room + (S.ban === "all" ? "" : " "+S.ban+"반");
+  var off = list.filter(function(s){ return statusOf(s.sid,S.period)!=="A"; });
+  if(!off.length){ toast("이미 전원 출석입니다"); return; }
+  ask(scope+" "+S.period+"교시 표시 "+off.length+"건을 지우고 전원 출석으로 되돌릴까요?").then(function(yes){
+    if(!yes) return;
+    off.forEach(function(s){ setStatus(s.sid, S.period, "A"); });
+    renderGrid(); renderPeriods(); renderRooms();
+  });
+};
+
+document.querySelectorAll('.views button').forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll('.views button').forEach(function(x){ x.setAttribute("aria-selected", x===b); });
+    var v = b.dataset.view;
+    document.getElementById("view-check").hidden  = v!=="check";
+    document.getElementById("view-log").hidden    = v!=="log";
+    document.getElementById("view-roster").hidden = v!=="roster";
+    document.getElementById("datebar").style.display = v==="check" ? "" : "none";
+    if(v==="log") renderLog();
+    if(v==="roster") renderRoster();
+  };
+});
+
+/* ---------- 백업 ---------- */
+function monthKeys(){
+  var out = [];
+  if(MODE === "local"){
+    for(var i=0;i<window.localStorage.length;i++){
+      var k = window.localStorage.key(i);
+      if(k && k.indexOf(PREFIX+"att.") === 0) out.push(k.slice(PREFIX.length));
+    }
+  }else{
+    Object.keys(mem).forEach(function(k){ if(k.indexOf("att.") === 0) out.push(k); });
+  }
+  if(S.monthKey && out.indexOf(S.monthKey) < 0) out.push(S.monthKey);
+  return out;
+}
+document.getElementById("backupSave").onclick = function(){
+  var keys = monthKeys();
+  Promise.all(keys.map(function(k){ return sget(k); })).then(function(vals){
+    var bundle = {app:"jeongsiban", saved:iso(new Date()), roster:S.roster, months:{}};
+    keys.forEach(function(k,i){ if(vals[i]) bundle.months[k] = vals[i]; });
+    if(S.monthKey) bundle.months[S.monthKey] = S.month;
+    var blob = new Blob([JSON.stringify(bundle)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "정시반_백업_" + iso(new Date()) + ".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    toast("백업 파일을 내려받았습니다");
+  });
+};
+document.getElementById("backupPick").onclick = function(){ document.getElementById("backupFile").click(); };
+document.getElementById("backupFile").addEventListener("change", function(e){
+  var f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  var fr = new FileReader();
+  fr.onload = function(){
+    var b;
+    try{ b = JSON.parse(fr.result); }catch(err){ toast("백업 파일을 읽지 못했습니다"); return; }
+    if(!b || b.app !== "jeongsiban"){ toast("이 앱의 백업 파일이 아닙니다"); return; }
+    ask("백업을 불러오면 지금 명단과 기록이 백업 내용으로 바뀝니다. 계속할까요?").then(function(yes){
+      if(!yes) return;
+      var jobs = [];
+      if(b.roster) jobs.push(sset("roster.v1", b.roster));
+      Object.keys(b.months || {}).forEach(function(k){ jobs.push(sset(k, b.months[k])); });
+      Promise.all(jobs).then(function(){
+        if(b.roster) S.roster = b.roster;
+        S.monthKey = "";
+        loadMonthFor(S.date).then(function(){ renderRoster(); renderCheck(); toast("백업을 불러왔습니다"); });
+      });
+    });
+  };
+  fr.readAsText(f);
+});
+
+document.getElementById("emblem").onclick = pickEmblem;
+document.getElementById("emblemPick").onclick = pickEmblem;
+document.getElementById("emblemFile").addEventListener("change", function(e){
+  var f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  if(f.size > 900000){ toast("파일이 큽니다. 1MB 미만으로 줄여주세요"); return; }
+  var fr = new FileReader();
+  fr.onload = function(){
+    paintEmblem(fr.result);
+    sset("emblem.v1", fr.result).then(function(ok){ toast(ok ? "교표를 넣었습니다" : "교표 저장 실패"); });
+  };
+  fr.onerror = function(){ toast("이미지를 읽지 못했습니다"); };
+  fr.readAsDataURL(f);
+});
+document.getElementById("emblemDel").onclick = function(){
+  ask("풍산고등학교 기본 교표로 되돌릴까요?").then(function(yes){
+    if(!yes) return;
+    paintEmblem(DEFAULT_EMBLEM);
+    sset("emblem.v1", "").then(function(){ toast("기본 교표로 되돌렸습니다"); });
+  });
+};
+
+document.getElementById("prevMonth").onclick = function(){
+  var d = parseISO(S.logMonth+"-01"); d.setMonth(d.getMonth()-1); S.logMonth = iso(d).slice(0,7); renderLog();
+};
+document.getElementById("nextMonth").onclick = function(){
+  var d = parseISO(S.logMonth+"-01"); d.setMonth(d.getMonth()+1); S.logMonth = iso(d).slice(0,7); renderLog();
+};
+document.getElementById("csvSum").onclick = exportSummary;
+document.getElementById("csvDetail").onclick = exportDetail;
+
+function addFromRow(row){
+  var sidI = row.querySelector('input[data-nf="sid"]');
+  var nmI  = row.querySelector('input[data-nf="name"]');
+  var sid = sidI.value.trim(), nm = nmI.value.trim();
+  if(!sid || !nm){ toast("학번과 이름을 모두 넣어주세요"); (sid?nmI:sidI).focus(); return; }
+  if(S.roster.some(function(x){ return x.sid === sid; })){ toast("이미 있는 학번입니다"); sidI.focus(); return; }
+  S.roster.push({room:row.dataset.room, sid:sid, name:nm});
+  saveRoster().then(function(){
+    renderRoster(); renderCheck();
+    toast(nm + " 추가됨");
+    var next = document.querySelector('.addrow[data-room="'+row.dataset.room+'"] input[data-nf="sid"]');
+    if(next) next.focus();
+  });
+}
+
+document.getElementById("rosterEdit").addEventListener("click", function(e){
+  var btn = e.target.closest("button[data-act]"); if(!btn) return;
+  var row = btn.closest(".rowedit");
+  if(btn.dataset.act === "add"){ addFromRow(row); return; }
+
+  var i = +row.dataset.i;
+  var s = S.roster[i]; if(!s) return;
+  if(btn.dataset.act === "move"){
+    s.room = (s.room === ROOMS[0]) ? ROOMS[1] : ROOMS[0];
+    saveRoster().then(function(){ renderRoster(); renderCheck(); toast(s.name+" → "+s.room); });
+  }else{
+    ask(s.name+" 학생을 명단에서 지울까요? 지난 기록은 남습니다.").then(function(yes){
+      if(!yes) return;
+      S.roster.splice(i,1);
+      saveRoster().then(function(){ renderRoster(); renderCheck(); toast(s.name+" 삭제됨"); });
+    });
+  }
+});
+document.getElementById("rosterEdit").addEventListener("keydown", function(e){
+  if(e.key !== "Enter") return;
+  var row = e.target.closest(".addrow"); if(!row) return;
+  e.preventDefault(); addFromRow(row);
+});
+document.getElementById("rosterEdit").addEventListener("change", function(e){
+  var inp = e.target.closest("input[data-f]"); if(!inp) return;
+  var i = +inp.closest(".rowedit").dataset.i;
+  var v = inp.value.trim();
+  if(!v || !S.roster[i]){ renderRoster(); return; }
+  if(inp.dataset.f === "sid" && S.roster.some(function(x,j){ return j!==i && x.sid===v; })){
+    toast("이미 있는 학번입니다"); renderRoster(); return;
+  }
+  S.roster[i][inp.dataset.f] = v;
+  saveRoster().then(function(){ renderCheck(); toast("저장됨"); });
+});
+document.getElementById("restore").onclick = function(){
+  ask("첨부해주신 원본 명단(68명)으로 되돌릴까요? 출석 기록은 지워지지 않습니다.").then(function(yes){
+    if(!yes) return;
+    S.roster = SEED.map(function(s){ return {room:s.room, sid:s.sid, name:s.name}; });
+    saveRoster().then(function(){ renderRoster(); renderCheck(); toast("원본 명단으로 되돌렸습니다"); });
+  });
+};
+document.getElementById("pasteGo").onclick = function(){
+  var room = document.getElementById("pasteRoom").value;
+  var raw = document.getElementById("pasteBox").value.trim();
+  if(!raw){ toast("붙여넣은 내용이 없습니다"); return; }
+  var added = [];
+  raw.split(/\r?\n/).forEach(function(line){
+    line = line.trim(); if(!line) return;
+    var parts = line.split(/[\t,\s]+/).filter(Boolean);
+    if(parts.length < 2) return;
+    added.push({room:room, sid:parts[0], name:parts.slice(1).join(" ")});
+  });
+  if(!added.length){ toast("학번과 이름을 읽지 못했습니다"); return; }
+  ask(room+" 명단을 "+added.length+"명으로 교체할까요?").then(function(yes){
+    if(!yes) return;
+    S.roster = S.roster.filter(function(s){ return s.room !== room; }).concat(added);
+    saveRoster().then(function(){
+      document.getElementById("pasteBox").value = "";
+      renderRoster(); renderCheck(); toast(room+" "+added.length+"명 반영됨");
+    });
+  });
+};
+
+/* ---------------- 로그인 · 계정 ---------------- */
+document.getElementById("lgGo").onclick = function(){
+  var em = document.getElementById("lgEmail").value.trim();
+  var pw = document.getElementById("lgPw").value;
+  if(!em || !pw){ document.getElementById("lgMsg").textContent = "이메일과 비밀번호를 모두 넣어주세요."; return; }
+  document.getElementById("lgMsg").textContent = "확인 중…";
+  signIn(em, pw).then(function(){
+    document.getElementById("lgPw").value = "";
+    document.getElementById("login").hidden = true;
+    document.getElementById("lgMsg").textContent = "공유 출석부입니다. 학교에서 발급받은 계정으로 들어가세요.";
+    paintAcct();
+    S.monthKey = "";
+    loadMonthFor(S.date).then(function(){ renderCheck(); syncPush(); });
+  }).catch(function(e){
+    var m = String(e.message || "");
+    document.getElementById("lgMsg").textContent =
+      /PASSWORD|EMAIL|INVALID/.test(m) ? "이메일이나 비밀번호가 맞지 않습니다." : "로그인하지 못했습니다. 인터넷 연결을 확인해 주세요.";
+  });
+};
+document.getElementById("lgPw").addEventListener("keydown", function(e){
+  if(e.key === "Enter") document.getElementById("lgGo").click();
+});
+function paintAcct(){
+  var panel = document.getElementById("acctPanel");
+  panel.hidden = !SHARED;
+  if(SHARED) document.getElementById("acctWho").textContent =
+    (AUTH.email || "로그인 안 됨") + " · 이 출석부는 선생님들이 함께 씁니다.";
+}
+document.getElementById("signOut").onclick = function(){
+  ask("로그아웃할까요? 아직 올라가지 않은 변경분이 있으면 먼저 동기화됩니다.").then(function(yes){
+    if(!yes) return;
+    syncPush().then(function(){ authClear(); paintAcct(); showLogin(); });
+  });
+};
+document.getElementById("syncNow").onclick = function(){
+  if(!SHARED){ toast("공유 설정이 아직 안 되어 있습니다"); return; }
+  syncPush().then(syncPull);
+};
+
+/* ---------------- 시작 ---------------- */
+authLoad(); pendLoad(); paintAcct();
+if(SHARED && !AUTH.refreshToken) showLogin();
+if(SHARED) setInterval(function(){ if(!document.getElementById("login").hidden) return; syncPull(); }, 20000);
+if(SHARED) window.addEventListener("online", function(){ syncPush(); });
+
+Promise.all([ sget("roster.v1"), loadMonthFor(S.date), sget("emblem.v1") ]).then(function(res){
+  var r = res[0];
+  paintEmblem(res[2] || DEFAULT_EMBLEM);
+  S.roster = (r && r.length) ? r : SEED.map(function(s){ return {room:s.room, sid:s.sid, name:s.name}; });
+  if(!r || !r.length) saveRoster();
+  if(MODE === "memory") setSync("임시 저장 — 새로고침하면 사라집니다");
+  renderCheck();
+  if(SHARED && AUTH.refreshToken) syncPush();
+});
+
+})();
+</script>
+</body>
+</html>
