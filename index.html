@@ -268,7 +268,7 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
   <div class="wrap">
     <div class="hdr">
       <div class="idblock">
-        <button class="emblem has" id="emblem" aria-label="학교 교표 바꾸기">교표</button>
+        <div class="emblem has" id="emblem" role="img" aria-label="풍산고등학교 교표"></div>
         <div class="brand">정시반 출석부<small>풍산고등학교 3학년 · 지혜의 숲 · 모둠학습실</small></div>
       </div>
       <div class="views" role="tablist" aria-label="화면 전환">
@@ -276,7 +276,6 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
         <button role="tab" data-view="log" aria-selected="false">기록</button>
         <button role="tab" data-view="roster" aria-selected="false">명단</button>
       </div>
-      <input type="file" id="emblemFile" accept="image/*" hidden>
     </div>
 
     <div class="datebar" id="datebar">
@@ -362,25 +361,6 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
     </div>
 
     <div class="panel">
-      <h3>백업과 옮기기</h3>
-      <p class="sub">기록은 이 브라우저에 저장됩니다. 다른 기기로 옮기거나 학기말에 보관할 때 쓰세요.</p>
-      <div class="toolbar" style="margin:0">
-        <button class="btn" id="backupSave">백업 파일 내려받기</button>
-        <button class="btn" id="backupPick">백업 불러오기</button>
-        <input type="file" id="backupFile" accept="application/json,.json" hidden>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h3>학교 교표</h3>
-      <p class="sub">풍산고등학교 교표가 기본으로 들어가 있습니다. 다른 이미지로 바꾸려면 파일을 올리세요.</p>
-      <div class="toolbar" style="margin:0">
-        <button class="btn" id="emblemPick">이미지 올리기</button>
-        <button class="mini" id="emblemDel">기본 교표로</button>
-      </div>
-    </div>
-
-    <div class="panel">
       <h3>명단 붙여넣기</h3>
       <p class="sub">한 줄에 <b>학번 이름</b> 형식으로 넣으세요. 탭·쉼표·공백 모두 됩니다. 넣는 학습실을 고른 뒤 불러오면 그 학습실 명단이 교체됩니다.</p>
       <textarea id="pasteBox" placeholder="3101 홍길동&#10;3102 김철수&#10;3103 이영희"></textarea>
@@ -427,6 +407,16 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
 "use strict";
 
 /* ---------------- 기본 명단 ---------------- */
+/* =========================================================
+   공유 설정 — 명단과 출결을 선생님들이 함께 씁니다.
+   ========================================================= */
+var FB = {
+  projectId: "poongsan3-b49c8",
+  apiKey: "AIzaSyCXHWNaauQc9TJFNiiOKUyc6UBfnUxUxFU",
+  collection: "jeongsiban"
+};
+var SHARED = !!FB.apiKey;
+
 /* 풍산고등학교 교표 (파일에 내장) */
 var DEFAULT_EMBLEM = "data:image/png;base64,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";
 
@@ -749,7 +739,7 @@ function queueSave(){
   saveTimer = setTimeout(function(){
     sset(S.monthKey, S.month).then(function(ok){
       el.textContent = ok ? (SHARED ? "동기화 중" : "저장됨") : "저장 실패 — 화면을 닫지 마세요";
-      if(SHARED) syncPush().then(rosterPush).then(rosterPull).then(renderCheck);
+      if(SHARED) syncPush();
     });
   }, 700);
 }
@@ -973,17 +963,10 @@ function renderLog(){
 }
 
 /* ---------------- 교표 ---------------- */
-function paintEmblem(dataUrl){
-  var el = document.getElementById("emblem");
-  if(dataUrl){
-    el.innerHTML = '<img src="'+dataUrl+'" alt="풍산고등학교 교표">';
-    el.classList.add("has");
-  }else{
-    el.textContent = "교표";
-    el.classList.remove("has");
-  }
+function paintEmblem(){
+  document.getElementById("emblem").innerHTML =
+    '<img src="' + DEFAULT_EMBLEM + '" alt="풍산고등학교 교표">';
 }
-function pickEmblem(){ document.getElementById("emblemFile").click(); }
 
 /* ---------------- 명단 ---------------- */
 function renderRoster(){
@@ -1253,83 +1236,6 @@ document.querySelectorAll('.views button').forEach(function(b){
   };
 });
 
-/* ---------- 백업 ---------- */
-function monthKeys(){
-  var out = [];
-  if(MODE === "local"){
-    for(var i=0;i<window.localStorage.length;i++){
-      var k = window.localStorage.key(i);
-      if(k && k.indexOf(PREFIX+"att.") === 0) out.push(k.slice(PREFIX.length));
-    }
-  }else{
-    Object.keys(mem).forEach(function(k){ if(k.indexOf("att.") === 0) out.push(k); });
-  }
-  if(S.monthKey && out.indexOf(S.monthKey) < 0) out.push(S.monthKey);
-  return out;
-}
-document.getElementById("backupSave").onclick = function(){
-  var keys = monthKeys();
-  Promise.all(keys.map(function(k){ return sget(k); })).then(function(vals){
-    var bundle = {app:"jeongsiban", saved:iso(new Date()), roster:S.roster, months:{}};
-    keys.forEach(function(k,i){ if(vals[i]) bundle.months[k] = vals[i]; });
-    if(S.monthKey) bundle.months[S.monthKey] = S.month;
-    var blob = new Blob([JSON.stringify(bundle)], {type:"application/json"});
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "정시반_백업_" + iso(new Date()) + ".json";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
-    toast("백업 파일을 내려받았습니다");
-  });
-};
-document.getElementById("backupPick").onclick = function(){ document.getElementById("backupFile").click(); };
-document.getElementById("backupFile").addEventListener("change", function(e){
-  var f = e.target.files && e.target.files[0];
-  e.target.value = "";
-  if(!f) return;
-  var fr = new FileReader();
-  fr.onload = function(){
-    var b;
-    try{ b = JSON.parse(fr.result); }catch(err){ toast("백업 파일을 읽지 못했습니다"); return; }
-    if(!b || b.app !== "jeongsiban"){ toast("이 앱의 백업 파일이 아닙니다"); return; }
-    ask("백업을 불러오면 지금 명단과 기록이 백업 내용으로 바뀝니다. 계속할까요?").then(function(yes){
-      if(!yes) return;
-      var jobs = [];
-      if(b.roster) jobs.push(sset("roster.v1", b.roster));
-      Object.keys(b.months || {}).forEach(function(k){ jobs.push(sset(k, b.months[k])); });
-      Promise.all(jobs).then(function(){
-        if(b.roster) S.roster = b.roster;
-        S.monthKey = "";
-        loadMonthFor(S.date).then(function(){ renderRoster(); renderCheck(); toast("백업을 불러왔습니다"); });
-      });
-    });
-  };
-  fr.readAsText(f);
-});
-
-document.getElementById("emblem").onclick = pickEmblem;
-document.getElementById("emblemPick").onclick = pickEmblem;
-document.getElementById("emblemFile").addEventListener("change", function(e){
-  var f = e.target.files && e.target.files[0];
-  e.target.value = "";
-  if(!f) return;
-  if(f.size > 900000){ toast("파일이 큽니다. 1MB 미만으로 줄여주세요"); return; }
-  var fr = new FileReader();
-  fr.onload = function(){
-    paintEmblem(fr.result);
-    sset("emblem.v1", fr.result).then(function(ok){ toast(ok ? "교표를 넣었습니다" : "교표 저장 실패"); });
-  };
-  fr.onerror = function(){ toast("이미지를 읽지 못했습니다"); };
-  fr.readAsDataURL(f);
-});
-document.getElementById("emblemDel").onclick = function(){
-  ask("풍산고등학교 기본 교표로 되돌릴까요?").then(function(yes){
-    if(!yes) return;
-    paintEmblem(DEFAULT_EMBLEM);
-    sset("emblem.v1", "").then(function(){ toast("기본 교표로 되돌렸습니다"); });
-  });
-};
-
 document.getElementById("prevMonth").onclick = function(){
   var d = parseISO(S.logMonth+"-01"); d.setMonth(d.getMonth()-1); S.logMonth = iso(d).slice(0,7); renderLog();
 };
@@ -1346,6 +1252,7 @@ function addFromRow(row){
   if(!sid || !nm){ toast("학번과 이름을 모두 넣어주세요"); (sid?nmI:sidI).focus(); return; }
   if(S.roster.some(function(x){ return x.sid === sid; })){ toast("이미 있는 학번입니다"); sidI.focus(); return; }
   S.roster.push({room:row.dataset.room, sid:sid, name:nm});
+  ropsPush({t:"set", sid:sid, name:nm, room:row.dataset.room});
   saveRoster().then(function(){
     renderRoster(); renderCheck();
     toast(nm + " 추가됨");
@@ -1363,12 +1270,14 @@ document.getElementById("rosterEdit").addEventListener("click", function(e){
   var s = S.roster[i]; if(!s) return;
   if(btn.dataset.act === "move"){
     s.room = (s.room === ROOMS[0]) ? ROOMS[1] : ROOMS[0];
-    saveRoster().then(function(){ renderRoster(); renderCheck(); toast(s.name+" → "+s.room); });
+    ropsPush({t:"set", sid:s.sid, name:s.name, room:s.room});
+    saveRoster().then(function(){ renderRoster(); renderCheck(); });
   }else{
     ask(s.name+" 학생을 명단에서 지울까요? 지난 기록은 남습니다.").then(function(yes){
       if(!yes) return;
+      ropsPush({t:"del", sid:s.sid});
       S.roster.splice(i,1);
-      saveRoster().then(function(){ renderRoster(); renderCheck(); toast(s.name+" 삭제됨"); });
+      saveRoster().then(function(){ renderRoster(); renderCheck(); });
     });
   }
 });
@@ -1385,8 +1294,11 @@ document.getElementById("rosterEdit").addEventListener("change", function(e){
   if(inp.dataset.f === "sid" && S.roster.some(function(x,j){ return j!==i && x.sid===v; })){
     toast("이미 있는 학번입니다"); renderRoster(); return;
   }
+  var was = S.roster[i].sid;
   S.roster[i][inp.dataset.f] = v;
-  saveRoster().then(function(){ renderCheck(); toast("저장됨"); });
+  var t = S.roster[i];
+  ropsPush({t:"set", sid:t.sid, name:t.name, room:t.room, was:was});
+  saveRoster().then(function(){ renderRoster(); renderCheck(); });
 });
 document.getElementById("pasteGo").onclick = function(){
   var room = document.getElementById("pasteRoom").value;
@@ -1402,6 +1314,7 @@ document.getElementById("pasteGo").onclick = function(){
   if(!added.length){ toast("학번과 이름을 읽지 못했습니다"); return; }
   ask(room+" 명단을 "+added.length+"명으로 교체할까요?").then(function(yes){
     if(!yes) return;
+    ropsPush({t:"room", room:room, list:added});
     S.roster = S.roster.filter(function(s){ return s.room !== room; }).concat(added);
     saveRoster().then(function(){
       document.getElementById("pasteBox").value = "";
@@ -1436,13 +1349,13 @@ ropsLoad();
 if(SHARED) setInterval(function(){ syncPull(); rosterPull(); }, 20000);
 if(SHARED) window.addEventListener("online", function(){ syncPush().then(rosterPush); });
 
-Promise.all([ sget("roster.v1"), loadMonthFor(S.date), sget("emblem.v1") ]).then(function(res){
+paintEmblem();
+Promise.all([ sget("roster.v1"), loadMonthFor(S.date) ]).then(function(res){
   var r = res[0];
-  paintEmblem(res[2] || DEFAULT_EMBLEM);
   S.roster = sortRoster((r && r.length) ? r : []);
   if(MODE === "memory") setSync("임시 저장 — 새로고침하면 사라집니다");
   renderCheck();
-  if(SHARED) syncPush();
+  if(SHARED) syncPush().then(rosterPush).then(rosterPull);
 });
 
 })();
