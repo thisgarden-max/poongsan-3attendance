@@ -284,6 +284,23 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
   .pno{width:20px;text-align:right;font-size:9pt;color:#444}
   .pnm{flex:1;font-size:14pt;font-weight:600}
   .pbox{width:12px;height:12px;border:1px solid #999;border-radius:2px}
+
+  /* 날짜별 출결표 */
+  .ptab{width:100%;border-collapse:collapse;font-size:9pt;
+        -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ptab th,.ptab td{border:1px solid #8a8a8a;padding:2px 3px}
+  .ptab th{background:#eaeaea;font-size:8pt;font-weight:700;text-align:center}
+  .ptab .banc{width:9mm;text-align:center;font-size:8pt;color:#333}
+  .ptab .noc{width:8mm;text-align:right;font-size:8.5pt;color:#333}
+  .ptab .nmc{font-size:11.5pt;font-weight:600;white-space:nowrap}
+  .ptab .pc{width:9mm;text-align:center;font-size:11pt;font-weight:700}
+  .ptab .whyc{font-size:8.5pt}
+  .ptab tr.b1 td{border-top:1.6px solid #000}
+  .ptab.tight{font-size:8pt}
+  .ptab.tight th,.ptab.tight td{padding:1px 2px}
+  .ptab.tight .nmc{font-size:10.5pt}
+  .ptab.tight .pc{font-size:10pt}
+  .pnote{margin:7px 0 0;font-size:8.5pt;color:#333}
 }
 /* 명단 동기화 상태 줄 */
 .rstate{font-size:13px;color:var(--ink-soft);margin:0 0 10px}
@@ -329,6 +346,7 @@ textarea{width:100%;min-height:110px;border:1px solid var(--line-soft);border-ra
       <div class="tally" id="tally"></div>
       <div class="acts">
         <button class="saved" id="saved" title="눌러서 연결 상태 확인"></button>
+        <button class="btn" id="printCheckBtn">이 날짜 인쇄</button>
         <button class="btn" id="resetPeriod">이 교시 전원 출석</button>
       </div>
     </div>
@@ -817,14 +835,26 @@ function setCell(sid, period, st, reason){
 function setStatus(sid, period, st){
   setCell(sid, period, st, st === "A" ? "" : reasonOf(sid, period));
 }
-/* 결석·조퇴는 이후 교시까지, 지각은 해당 교시만 */
+/* 결석·조퇴는 이후 교시까지, 지각은 해당 교시만.
+   결석/조퇴에서 지각으로 넘길 때는, 앞서 자동으로 채워진 이후 교시를 출석으로 되돌린다.
+   안 그러면 화면에는 지각으로 보이는데 뒤 교시에 결석이 남는다. */
 function applyStatus(sid, period, st){
   var last = periodsOn(S.date);
-  if(st === "L"){ setCell(sid, period, "L", reasonOf(sid, period)); return 1; }
+  var prev = statusOf(sid, period);
+  if(st === "L"){
+    setCell(sid, period, "L", reasonOf(sid, period));
+    var cleared = 0;
+    if(prev === "B" || prev === "E"){
+      for(var q = period + 1; q <= last; q++){
+        if(statusOf(sid, q) === prev){ setCell(sid, q, "A", ""); cleared++; }
+      }
+    }
+    return {n:1, cleared:cleared};
+  }
   var reason = (st === "A") ? "" : reasonOf(sid, period);
   var n = 0;
   for(var p = period; p <= last; p++){ setCell(sid, p, st, reason); n++; }
-  return n;
+  return {n:n, cleared:0};
 }
 
 var saveTimer = null;
@@ -1308,6 +1338,60 @@ function printRoster(){
 }
 document.getElementById("rosterPrint").onclick = printRoster;
 
+/* ---------------- 출결표 인쇄 (고른 날짜, 학습실마다 한 장) ---------------- */
+var PMARK = {A:"", B:"결", L:"지", E:"조"};
+function printCheck(){
+  if(!S.roster.length){ toast("명단이 비어 있습니다"); return; }
+  var last = periodsOn(S.date);
+  var dd = parseISO(S.date);
+  var dateTxt = (dd.getMonth()+1) + "월 " + dd.getDate() + "일 (" + DOW[dd.getDay()] + ")";
+  var host = document.getElementById("printArea");
+
+  host.innerHTML = ROOMS.map(function(r){
+    var list = S.roster.filter(function(s){ return s.room === r; })
+                       .sort(function(a,b){ return sidRank(a.sid) - sidRank(b.sid); });
+    if(!list.length) return "";
+
+    var tot = {B:0, L:0, E:0};
+    var prevBan = null;
+    var body = list.map(function(s){
+      var cells = "", whys = [];
+      for(var p = 1; p <= last; p++){
+        var c = cellOf(s.sid, p);
+        var st = c ? c.s : "A";
+        if(st !== "A" && tot[st] !== undefined) tot[st]++;
+        if(c && c.r && whys.indexOf(c.r) < 0) whys.push(c.r);
+        cells += '<td class="pc">' + PMARK[st] + '</td>';
+      }
+      var b = banOf(s.sid);
+      var edge = (b !== prevBan) ? ' class="b1"' : '';
+      prevBan = b;
+      return '<tr' + edge + '><td class="banc">' + b + '</td>' +
+             '<td class="noc">' + esc(String(seatOf(s.sid)).replace(/^0+(?=\d)/,"")) + '</td>' +
+             '<td class="nmc">' + esc(s.name) + '</td>' + cells +
+             '<td class="whyc">' + esc(whys.join(", ")) + '</td></tr>';
+    }).join("");
+
+    var head = '<tr><th>반</th><th>번</th><th>이름</th>';
+    for(var p = 1; p <= last; p++) head += '<th>' + p + '</th>';
+    head += '<th>사유</th></tr>';
+
+    var cls = list.length > 38 ? "ptab tight" : "ptab";
+
+    return '<section class="psheet">' +
+      '<div class="ptitle"><h1>' + esc(r) + ' <span style="font-size:13pt;font-weight:400">' + dateTxt + '</span></h1>' +
+      '<div class="pmeta">풍산고등학교 3학년 일과 중 자기주도 학습반 · 모두 ' + list.length +
+        '명 · ' + last + '교시 운영</div></div>' +
+      '<table class="' + cls + '"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>' +
+      '<p class="pnote">빈칸은 출석입니다. <b>결</b> 결석 · <b>지</b> 지각 · <b>조</b> 조퇴 ' +
+        '&nbsp;|&nbsp; 이 날 합계 — 결석 ' + tot.B + ' · 지각 ' + tot.L + ' · 조퇴 ' + tot.E + ' (교시 단위)</p>' +
+      '</section>';
+  }).join("");
+
+  window.print();
+}
+document.getElementById("printCheckBtn").onclick = printCheck;
+
 /* ---------------- CSV ---------------- */
 function download(name, text){
   var blob = new Blob(["\uFEFF" + text], {type:"text/csv;charset=utf-8;"});
@@ -1411,9 +1495,11 @@ document.getElementById("grid").addEventListener("click", function(e){
   var b = e.target.closest(".stu-main"); if(!b) return;
   var sid = b.dataset.sid;
   var next = CYCLE[statusOf(sid, S.period)];
-  var n = applyStatus(sid, S.period, next);
-  if(n > 1){
-    var last = periodsOn(S.date);
+  var res = applyStatus(sid, S.period, next);
+  var last = periodsOn(S.date);
+  if(next === "L" && res.cleared){
+    toast("지각 — " + S.period + "교시만 표시하고 " + (S.period+1) + "~" + last + "교시는 출석으로 되돌림");
+  }else if(res.n > 1){
     toast(next === "A"
       ? S.period + "~" + last + "교시 출석으로 되돌림"
       : LABEL[next] + " — " + S.period + "~" + last + "교시에 반영됨");
